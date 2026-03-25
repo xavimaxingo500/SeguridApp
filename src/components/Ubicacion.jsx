@@ -59,3 +59,7 @@ const Ubicacion = ({ onUbicacionObtenida, showNotification }) => {
 };
 
 export default Ubicacion;
+
+
+
+

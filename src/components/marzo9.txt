@@ -1,0 +1,1820 @@
+import React, { useRef, useState } from 'react';
+import Webcam from 'react-webcam';
+
+const Camara = ({ onCapture }) => {
+  const webcamRef = useRef(null);
+  const [imgSrc, setImgSrc] = useState(null);
+
+  const capture = () => {
+    const imageSrc = webcamRef.current.getScreenshot();
+    setImgSrc(imageSrc);
+    const hora = new Date().toLocaleString('es-ES', {
+      dateStyle: 'full',
+      timeStyle: 'medium'
+    });
+    onCapture(imageSrc, hora);
+  };
+
+  return (
+    <div className="card">
+      <h2 className="card-title">📸 Capturar Evidencia Fotográfica</h2>
+      <div className="flex flex-col md:flex-row gap-6">
+        <div className="flex-1">
+          <div className="camera-preview">
+            {imgSrc ? (
+              <img src={imgSrc} alt="Captura" className="w-full h-auto rounded-lg" />
+            ) : (
+              <Webcam
+                audio={false}
+                ref={webcamRef}
+                screenshotFormat="image/jpeg"
+                className="w-full h-auto rounded-lg"
+                videoConstraints={{
+                  facingMode: 'environment',
+                  width: { ideal: 1280 },
+                  height: { ideal: 720 }
+                }}
+              />
+            )}
+          </div>
+          <div className="mt-4 flex gap-4">
+            <button onClick={capture} className="btn btn-primary flex-1">
+              {imgSrc ? '📸 Tomar Otra Foto' : '📸 Capturar Foto'}
+            </button>
+            {imgSrc && (
+              <button onClick={() => setImgSrc(null)} className="btn btn-secondary flex-1">
+                🔄 Reintentar
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="info-box flex-1">
+          <h3 className="font-bold mb-2">Instrucciones:</h3>
+          <ul className="list-disc pl-5 space-y-2 text-sm">
+            <li>Asegúrese de que el vehículo y la falla estén completamente visibles.</li>
+            <li>Capture la placa del vehículo si es posible.</li>
+            <li>Procure buena iluminación para mejor calidad.</li>
+            <li>Mantenga el dispositivo estable.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Camara;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import React, { useState, useEffect } from "react";
+
+export const estructura = {
+  Luces: [ "Stop", "Reversa", "Intermitentes", "Direccionales", "Delanteras A y B" ],
+  Niveles: [ "Aceite de motor", "Líquido de frenos", "Dirección hidráulica", "Agua / anticongelante" ],
+  Llantas: [ "Presión adecuada", "Buenas condiciones", "Refacción en buen estado" ],
+  Seguridad: [ "Cinturón de seguridad", "Gato hidráulico", "Llave de cruz", "Señales reflectantes", "Espejos", "Limpia parabrisas", "Extintor vigente" ]
+};
+
+export default function Checklist({ onChange, datosPrevios }) {
+  const [respuestas, setRespuestas] = useState(datosPrevios || {});
+  const [seccionActiva, setSeccionActiva] = useState(0);
+  
+  useEffect(() => { setRespuestas(datosPrevios || {}); }, [datosPrevios]);
+
+  const nombresSecciones = Object.keys(estructura);
+  const seccionActual = nombresSecciones[seccionActiva];
+  const itemsActuales = estructura[seccionActual];
+
+  const marcar = (item, valor) => {
+    const nuevo = { ...respuestas, [item]: valor };
+    setRespuestas(nuevo);
+    onChange(nuevo);
+  };
+
+  const obtenerColor = (item, op) => {
+    if (respuestas[item] === op) {
+      if (op === "SI") return "#4CAF50"; 
+      if (op === "NO") return "#F44336"; 
+      if (op === "NA") return "#FF9800"; 
+    }
+    return "#e0e0e0"; 
+  };
+
+  const siguienteSeccion = () => { if (seccionActiva < nombresSecciones.length - 1) setSeccionActiva(seccionActiva + 1); };
+  const anteriorSeccion = () => { if (seccionActiva > 0) setSeccionActiva(seccionActiva - 1); };
+
+  return (
+    <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+      <h2 style={{ textAlign: 'center', marginBottom: 15, fontSize: '1.4rem', color: '#1a365d' }}>Revisión Vehicular</h2>
+      
+      <div style={{ display: 'flex', overflowX: 'auto', gap: '8px', marginBottom: '20px', paddingBottom: '5px' }}>
+        {nombresSecciones.map((sec, index) => {
+          const itemsDeEstaSeccion = estructura[sec];
+          const contestados = itemsDeEstaSeccion.filter(i => respuestas[i]).length;
+          const completa = contestados === itemsDeEstaSeccion.length;
+
+          return (
+            <button key={sec} onClick={() => setSeccionActiva(index)}
+              style={{
+                flex: '0 0 auto', padding: '8px 12px', cursor: 'pointer', fontSize: '0.85rem', borderRadius: '20px',
+                background: seccionActiva === index ? '#2196F3' : (completa ? '#E8F5E9' : '#f0f0f0'),
+                color: seccionActiva === index ? 'white' : (completa ? '#2E7D32' : '#333'),
+                border: completa && seccionActiva !== index ? '1px solid #A5D6A7' : 'none',
+                fontWeight: seccionActiva === index ? 'bold' : 'normal'
+              }}>
+              {sec} {completa ? '✓' : ''}
+            </button>
+          );
+        })}
+      </div>
+
+      <div style={{ background: '#fff', padding: '15px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+        <h3 style={{ margin: '0 0 15px 0', borderBottom: '2px solid #2196F3', paddingBottom: '8px', color: '#1a365d' }}>{seccionActual}</h3>
+
+        {itemsActuales.map(item => (
+          <div key={item} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, padding: "5px 0", borderBottom: "1px solid #eee" }}>
+            <span style={{ flex: 1, fontWeight: '500' }}>{item}</span>
+            <div style={{ display: "flex", gap: 5 }}>
+              {["SI", "NO", "NA"].map(op => (
+                <button key={op} onClick={() => marcar(item, op)}
+                  /* AQUÍ REGRESAMOS AL ESTILO ORIGINAL */
+                  style={{
+                    padding: "8px 12px",
+                    background: obtenerColor(item, op),
+                    color: respuestas[item] === op ? "white" : "black",
+                    border: "1px solid #999",
+                    borderRadius: 4,
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                    minWidth: "45px"
+                  }}>
+                  {op}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
+        <button onClick={anteriorSeccion} disabled={seccionActiva === 0} style={{ padding: '10px 15px', background: seccionActiva === 0 ? '#e0e0e0' : '#757575', color: 'white', border: 'none', borderRadius: '6px', cursor: seccionActiva === 0 ? 'not-allowed' : 'pointer' }}>
+          ← Anterior
+        </button>
+
+        {seccionActiva < nombresSecciones.length - 1 ? (
+          <button onClick={siguienteSeccion} style={{ padding: '10px 15px', background: '#2196F3', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+            Siguiente Sección →
+          </button>
+        ) : (
+          <div style={{ padding: '10px 15px', color: '#4CAF50', fontWeight: 'bold' }}>Lista Terminada ✓</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+//cehcklist
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import React, { useState, useEffect } from 'react';
+import { PDFDocument } from 'pdf-lib';
+
+const AREAS_CFE = [
+  "Recursos Humanos", "CAC Oriente", "CAC Poniente", "CAC Norte", "CAC Sur",
+  "CAC Centro", "CAC Progreso", "CAC Uman", "CAC Conkal", "CAC Hunucma",
+  "CAC Acanceh", "CAC Caucel", "Facturación", "Cobranza", "Notificaciones",
+  "T.I.", "Grandes Clientes"
+];
+
+const DatosGenerales = ({ datos, onChange, onCargarDatos, showNotification }) => {
+  const [cargandoPDF, setCargandoPDF] = useState(false);
+  const [mostrarOtro, setMostrarOtro] = useState(() => {
+    return datos.area && !AREAS_CFE.includes(datos.area);
+  });
+
+  useEffect(() => {
+    if (!datos.periodo || !datos.mes || !datos.anio) {
+      const today = new Date();
+      const dayOfWeek = today.getDay() || 7; 
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - dayOfWeek + 1);
+      const friday = new Date(today);
+      friday.setDate(today.getDate() - dayOfWeek + 5);
+      const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+      onChange({
+        periodo: datos.periodo || `Del ${monday.getDate()} al ${friday.getDate()}`,
+        mes: datos.mes || meses[today.getMonth()],
+        anio: datos.anio || today.getFullYear().toString()
+      });
+    }
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    onChange({ [name]: value });
+  };
+
+  const handleAreaDropdown = (e) => {
+    const val = e.target.value;
+    if (val === 'Otros') {
+      setMostrarOtro(true);
+      onChange({ area: '' }); 
+    } else {
+      setMostrarOtro(false);
+      onChange({ area: val }); 
+    }
+  };
+
+  const handleSubirPDF = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setCargandoPDF(true);
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdfDoc = await PDFDocument.load(arrayBuffer);
+      const metadatosOcultos = pdfDoc.getKeywords();
+      if (metadatosOcultos) {
+        const datosExtraidos = JSON.parse(metadatosOcultos);
+        onCargarDatos(datosExtraidos);
+        showNotification('✅ Reporte anterior cargado correctamente', 'success');
+      } else {
+        showNotification('⚠️ Este PDF no contiene datos compatibles', 'warning');
+      }
+    } catch (error) {
+      console.error(error);
+      showNotification('❌ Error al leer el PDF', 'error');
+    }
+    setCargandoPDF(false);
+    e.target.value = null;
+  };
+
+  return (
+    <div className="card">
+      {/* DISEÑO ORIGINAL DE SUBIR ARCHIVO RESTAURADO */}
+      <div style={{ background: '#E3F2FD', padding: '20px', borderRadius: '12px', marginBottom: '30px', textAlign: 'center', border: '2px dashed #2196F3' }}>
+        <h3 style={{ margin: '0 0 10px 0', color: '#1565C0', fontSize: '1.2rem' }}>📂 ¿Continuar reporte de la semana pasada?</h3>
+        <p style={{ fontSize: '0.9rem', color: '#555', marginBottom: '15px' }}>
+          Sube tu PDF anterior para cargar toda la información y continuar en la semana que te toca.
+        </p>
+        <label style={{ background: '#2196F3', color: 'white', padding: '12px 25px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'inline-block', transition: '0.2s', boxShadow: '0 4px 6px rgba(33,150,243,0.3)' }}>
+          {cargandoPDF ? 'Leyendo documento...' : '📄 Subir PDF Anterior'}
+          <input type="file" accept="application/pdf" onChange={handleSubirPDF} style={{ display: 'none' }} disabled={cargandoPDF} />
+        </label>
+      </div>
+
+      <h2 className="card-title">📋 Datos del Reporte</h2>
+
+      <div className="form-grid">
+        <div className="form-group">
+          <label>NO. ECO (Económico):</label>
+          <input type="text" name="noEco" value={datos.noEco || ''} onChange={handleChange} placeholder="Ej. 12345" />
+        </div>
+        
+        <div className="form-group">
+          <label>Área o Depto:</label>
+          <select value={mostrarOtro ? 'Otros' : (datos.area || '')} onChange={handleAreaDropdown} style={{ padding: '10px', border: '1px solid #cbd5e0', borderRadius: '10px', fontSize: '1rem', backgroundColor: 'white' }}>
+            <option value="" disabled>Selecciona un área...</option>
+            {AREAS_CFE.map(a => <option key={a} value={a}>{a}</option>)}
+            <option value="Otros" style={{ fontWeight: 'bold' }}>Otros (Especificar)</option>
+          </select>
+        </div>
+
+        {mostrarOtro && (
+          <div className="form-group" style={{ animation: 'fadeIn 0.3s' }}>
+            <label style={{ color: '#E65100' }}>Especificar Área/Depto:</label>
+            <input type="text" name="area" value={datos.area || ''} onChange={handleChange} placeholder="Escribe tu área manual..." style={{ border: '2px solid #FF9800' }} />
+          </div>
+        )}
+
+        <div className="form-group full-width">
+          <label>Periodo de Revisión (Auto-calculado):</label>
+          <input type="text" name="periodo" value={datos.periodo || ''} onChange={handleChange} />
+        </div>
+        <div className="form-group">
+          <label>Mes:</label>
+          <input type="text" name="mes" value={datos.mes || ''} onChange={handleChange} />
+        </div>
+        <div className="form-group">
+          <label>Año:</label>
+          <input type="number" name="anio" value={datos.anio || ''} onChange={handleChange} />
+        </div>
+        <div className="form-group">
+          <label>Kilometraje Actual:</label>
+          <input type="number" name="kilometraje" value={datos.kilometraje || ''} onChange={handleChange} placeholder="Ej. 85000" />
+        </div>
+      </div>
+      <hr />
+      <h3>👤 Datos del Trabajador</h3>
+      <div className="form-grid">
+        <div className="form-group full-width">
+          <label>Nombre Completo:</label>
+          <input type="text" name="nombre" value={datos.nombre || ''} onChange={handleChange} placeholder="Tu nombre" />
+        </div>
+        <div className="form-group">
+          <label>RPE:</label>
+          <input type="text" name="rpe" value={datos.rpe || ''} onChange={handleChange} placeholder="Tu RPE" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DatosGenerales;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import React, { useRef, useState } from 'react';
+import SignatureCanvas from 'react-signature-canvas';
+
+const Firma = ({ onFirmaCompletada, showNotification }) => {
+  const firmaRef = useRef(null);
+  const [firmaData, setFirmaData] = useState(null);
+
+  const limpiarFirma = () => {
+    firmaRef.current.clear();
+    setFirmaData(null);
+  };
+
+  const guardarFirma = () => {
+    if (!firmaRef.current || firmaRef.current.isEmpty()) {
+      showNotification('Por favor, firma en el espacio proporcionado', 'warning');
+      return;
+    }
+    const firmaBase64 = firmaRef.current.getCanvas().toDataURL('image/png');
+    setFirmaData(firmaBase64);
+    onFirmaCompletada(firmaBase64);
+    showNotification('✅ Firma guardada correctamente', 'success');
+  };
+
+  return (
+    <div className="card">
+      <h2 className="card-title">✍️ Firma Digital de Confirmación</h2>
+      <p className="text-gray-600 mb-4">Firma en el recuadro para confirmar la veracidad de la información.</p>
+      <div className="signature-pad">
+        <SignatureCanvas
+          ref={firmaRef}
+          canvasProps={{ className: 'signature-canvas' }}
+          penColor="black"
+          backgroundColor="white"
+        />
+      </div>
+      <div className="flex gap-4">
+        <button onClick={limpiarFirma} className="btn btn-secondary flex-1">🧹 Borrar Firma</button>
+        <button onClick={guardarFirma} className="btn btn-primary flex-1">💾 Guardar Firma</button>
+      </div>
+      {firmaData && (
+        <div className="success-message">
+          <span>✅ Firma guardada correctamente</span>
+        </div>
+      )}
+      <p className="text-sm text-gray-500 mt-4"><strong>Nota:</strong> Esta firma tiene validez legal.</p>
+    </div>
+  );
+};
+
+export default Firma;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import React from 'react';
+
+const Home = ({ onSelectModule }) => {
+  return (
+    <div className="card text-center" style={{ maxWidth: '600px', margin: '40px auto', padding: '40px 20px' }}>
+      <h1 style={{ color: '#1a365d', fontSize: '2.2rem', marginBottom: '10px' }}>SeguridApp CFE</h1>
+      <p style={{ color: '#718096', marginBottom: '40px', fontSize: '1.1rem' }}>Sistema Integral de Reportes y Revisiones</p>
+
+      <h2 style={{ fontSize: '1.3rem', color: '#2d3748', marginBottom: '20px' }}>Selecciona el módulo a utilizar:</h2>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
+        <button
+          onClick={() => onSelectModule('vehiculos')}
+          style={{
+            background: '#2196F3', color: 'white', padding: '20px', borderRadius: '16px',
+            fontSize: '1.1rem', fontWeight: 'bold', border: 'none', cursor: 'pointer',
+            boxShadow: '0 4px 10px rgba(33,150,243,0.3)', transition: 'transform 0.2s',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
+          onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+        >
+          <span style={{ fontSize: '1.5rem' }}>🚗</span> Inspección de Vehículos Oficiales
+        </button>
+
+        <button disabled style={btnInactivoStyle}>
+          <span style={{ fontSize: '1.5rem' }}>🧯</span> Revisión de Extintores <br/><span style={{ fontSize: '0.8rem', fontWeight: 'normal' }}>(En desarrollo)</span>
+        </button>
+
+        <button disabled style={btnInactivoStyle}>
+          <span style={{ fontSize: '1.5rem' }}>📋</span> Módulo 3 <br/><span style={{ fontSize: '0.8rem', fontWeight: 'normal' }}>(En desarrollo)</span>
+        </button>
+
+        <button disabled style={btnInactivoStyle}>
+          <span style={{ fontSize: '1.5rem' }}>🏗️</span> Módulo 4 <br/><span style={{ fontSize: '0.8rem', fontWeight: 'normal' }}>(En desarrollo)</span>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const btnInactivoStyle = {
+  background: '#f1f5f9', color: '#94a3b8', padding: '15px', borderRadius: '16px',
+  fontSize: '1.1rem', fontWeight: 'bold', border: '2px dashed #cbd5e1', cursor: 'not-allowed',
+  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+};
+
+export default Home;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Notification.js
+import React, { useEffect } from 'react';
+
+const Notification = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 4000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const bgColor = type === 'error' ? '#f44336' : type === 'warning' ? '#ff9800' : '#4caf50';
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: '20px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      backgroundColor: bgColor,
+      color: 'white',
+      padding: '12px 24px',
+      borderRadius: '50px',
+      boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+      zIndex: 1000,
+      fontSize: '1rem',
+      fontWeight: 'bold',
+      animation: 'slideDown 0.3s ease-out',
+      maxWidth: '90%',
+      textAlign: 'center'
+    }}>
+      {message}
+    </div>
+  );
+};
+
+export default Notification;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import React from 'react';
+// import { jsPDF } from 'jspdf';
+// import { estructura } from './Checklist';
+
+// const Reporte = ({ datos, historicoSemanas, historicoFotos, showNotification }) => {
+//   const generarID = () => {
+//     const textoUbicacion = (datos.direccion || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+//     let codigo = "SW000";
+//     if (textoUbicacion.includes("montejo") || textoUbicacion.includes("alvarado") || textoUbicacion.includes("divisionales")) codigo = "SW000";
+//     else if (textoUbicacion.includes("merida")) codigo = "SW010";
+//     else if (textoUbicacion.includes("motul")) codigo = "SW020";
+//     else if (textoUbicacion.includes("ticul")) codigo = "SW030";
+//     else if (textoUbicacion.includes("campeche")) codigo = "SW040";
+//     else if (textoUbicacion.includes("carmen")) codigo = "SW050";
+//     else if (textoUbicacion.includes("chetumal")) codigo = "SW060";
+//     else if (textoUbicacion.includes("tizimin")) codigo = "SW070";
+//     else if (textoUbicacion.includes("cancun")) codigo = "SW120";
+//     else if (textoUbicacion.includes("riviera") || textoUbicacion.includes("maya")) codigo = "SW200";
+
+//     const now = new Date();
+//     const dia = String(now.getDate()).padStart(2, '0');
+//     const mes = String(now.getMonth() + 1).padStart(2, '0');
+//     const anio = now.getFullYear();
+//     const hora = String(now.getHours()).padStart(2, '0');
+//     const min = String(now.getMinutes()).padStart(2, '0');
+//     const seg = String(now.getSeconds()).padStart(2, '0');
+//     return `${codigo}${dia}${mes}${anio}${hora}${min}${seg}`;
+//   };
+
+//   const generarPDF = async () => {
+//     try {
+//       const ID_GENERADO = generarID();
+//       const doc = new jsPDF('l', 'mm', 'a4');
+//       const pageWidth = doc.internal.pageSize.getWidth();
+//       const pageHeight = doc.internal.pageSize.getHeight();
+//       const margin = 15;
+//       let yPos = 15;
+//       const f = datos.form || {};
+
+//       const estadoParaGuardar = JSON.stringify({
+//         form: f,
+//         historicoSemanas,
+//         historicoFotos
+//       });
+
+//       doc.setProperties({
+//         title: `Reporte_${ID_GENERADO}`,
+//         subject: 'Inspeccion Vehicular CFE',
+//         author: f.nombre || 'Trabajador CFE',
+//         keywords: estadoParaGuardar,
+//         creator: 'SeguridApp'
+//       });
+
+//       // Cabecera
+//       doc.setFontSize(8);
+//       doc.text("Forma SH-209", pageWidth - margin, yPos, { align: 'right' });
+//       yPos += 8;
+
+//       doc.setFillColor(230, 230, 230);
+//       doc.rect(margin, yPos, 20, 20, 'F');
+//       doc.rect(pageWidth - margin - 20, yPos, 20, 20, 'F');
+//       doc.setFontSize(6);
+//       doc.text("SUTERM", margin + 10, yPos + 10, { align: 'center' });
+//       doc.text("CFE", pageWidth - margin - 10, yPos + 10, { align: 'center' });
+//       doc.setFontSize(14);
+//       doc.setFont('helvetica', 'bold');
+//       doc.text("COMISION FEDERAL DE ELECTRICIDAD", pageWidth / 2, yPos + 4, { align: 'center' });
+//       doc.setFontSize(12);
+//       doc.text("DIVISION DE DISTRIBUCION PENINSULAR", pageWidth / 2, yPos + 11, { align: 'center' });
+//       doc.setFontSize(10);
+//       doc.text("VERIFICACION SEMANAL DE VEHÍCULO DE TRABAJO, PERSONAL OFICINA", pageWidth / 2, yPos + 18, { align: 'center' });
+//       yPos += 30;
+
+//       // Datos generales
+//       doc.setFontSize(9);
+//       doc.setFont('helvetica', 'bold');
+//       doc.text(`NO. ECO:`, margin, yPos); doc.setFont('helvetica', 'normal'); doc.text(`${f.noEco || '______'}`, margin + 20, yPos);
+//       doc.setFont('helvetica', 'bold'); doc.text(`ÁREA O DEPTO:`, margin + 70, yPos); doc.setFont('helvetica', 'normal'); doc.text(`${f.area || '______'}`, margin + 100, yPos);
+//       doc.setFont('helvetica', 'bold'); doc.text(`KILOMETRAJE INICIAL:`, margin + 180, yPos); doc.setFont('helvetica', 'normal'); doc.text(`${historicoSemanas[1]?._kilometraje || f.kilometraje || '______'}`, margin + 225, yPos);
+//       yPos += 8;
+//       doc.setFont('helvetica', 'bold'); doc.text(`PERIODO DE REVISIÓN:`, margin, yPos); doc.setFont('helvetica', 'normal'); doc.text(`${f.periodo || '______'}`, margin + 45, yPos);
+//       doc.setFont('helvetica', 'bold'); doc.text(`MES:`, margin + 140, yPos); doc.setFont('helvetica', 'normal'); doc.text(`${f.mes || '___'}`, margin + 150, yPos);
+//       doc.setFont('helvetica', 'bold'); doc.text(`AÑO:`, margin + 190, yPos); doc.setFont('helvetica', 'normal'); doc.text(`${f.anio || '___'}`, margin + 200, yPos);
+//       yPos += 12;
+
+//       // Tabla de 4 semanas
+//       const wActividad = 70;
+//       const wSemana = 48;
+//       const wOpcion = wSemana / 3;
+//       const hFila = 6.5;
+//       const xActividad = margin;
+
+//       // Encabezado
+//       doc.setFillColor(220, 220, 220);
+//       doc.rect(xActividad, yPos, wActividad, hFila * 2, 'FD');
+//       doc.setFont('helvetica', 'bold'); doc.text("ACTIVIDAD", xActividad + (wActividad/2), yPos + 8, { align: 'center' });
+//       [1,2,3,4].forEach((semanaNum, i) => {
+//         const xSem = xActividad + wActividad + (i * wSemana);
+//         doc.setFillColor(220,220,220); doc.rect(xSem, yPos, wSemana, hFila, 'FD');
+//         doc.text(`SEMANA ${semanaNum}`, xSem + (wSemana/2), yPos + 4.5, { align: 'center' });
+//         const ySub = yPos + hFila;
+//         doc.rect(xSem, ySub, wOpcion, hFila, 'FD');
+//         doc.rect(xSem + wOpcion, ySub, wOpcion, hFila, 'FD');
+//         doc.rect(xSem + (wOpcion*2), ySub, wOpcion, hFila, 'FD');
+//         doc.setFontSize(8);
+//         doc.text("SI", xSem + (wOpcion/2), ySub + 4.5, { align: 'center' });
+//         doc.text("NO", xSem + wOpcion + (wOpcion/2), ySub + 4.5, { align: 'center' });
+//         doc.text("N/A", xSem + (wOpcion*2) + (wOpcion/2), ySub + 4.5, { align: 'center' });
+//         doc.setFontSize(9);
+//       });
+//       yPos += (hFila * 2);
+
+//       // Cuerpo
+//       Object.entries(estructura).forEach(([nombreSeccion, itemsSeccion]) => {
+//         if (yPos > pageHeight - 30) { doc.addPage(); yPos = 20; }
+//         doc.setFillColor(200,200,200); doc.setFont('helvetica','bold');
+//         doc.rect(xActividad, yPos, wActividad + (wSemana*4), hFila, 'FD');
+//         doc.text(nombreSeccion.toUpperCase(), xActividad + 2, yPos + 4.5);
+//         yPos += hFila;
+//         doc.setFont('helvetica','normal'); doc.setFontSize(8);
+//         itemsSeccion.forEach((item) => {
+//           if (yPos > pageHeight - 30) { doc.addPage(); yPos = 20; }
+//           doc.rect(xActividad, yPos, wActividad, hFila);
+//           doc.text(item, xActividad + 2, yPos + 4.5);
+//           [1,2,3,4].forEach((semanaNum, i) => {
+//             const xSem = xActividad + wActividad + (i * wSemana);
+//             doc.rect(xSem, yPos, wOpcion, hFila);
+//             doc.rect(xSem + wOpcion, yPos, wOpcion, hFila);
+//             doc.rect(xSem + (wOpcion*2), yPos, wOpcion, hFila);
+//             const respuestaSemana = historicoSemanas[semanaNum]?.[item];
+//             if (respuestaSemana) {
+//               let xMark = xSem;
+//               let color = [200,200,200];
+//               if (respuestaSemana === "SI") color = [76,175,80];
+//               else if (respuestaSemana === "NO") { xMark += wOpcion; color = [244,67,54]; }
+//               else if (respuestaSemana === "NA") { xMark += (wOpcion*2); color = [255,152,0]; }
+//               doc.setFillColor(...color);
+//               doc.rect(xMark + 0.5, yPos + 0.5, wOpcion - 1, hFila - 1, 'F');
+//               doc.setTextColor(255); doc.setFont('helvetica','bold');
+//               doc.text("X", xMark + (wOpcion/2), yPos + 4.5, { align: 'center' });
+//               doc.setTextColor(0); doc.setFont('helvetica','normal');
+//             }
+//           });
+//           yPos += hFila;
+//         });
+//       });
+
+//       // Kilometraje
+//       if (yPos > pageHeight - 30) { doc.addPage(); yPos = 20; }
+//       doc.setFillColor(230,230,230);
+//       doc.rect(xActividad, yPos, wActividad, hFila, 'FD');
+//       doc.setFont('helvetica','bold'); doc.setFontSize(9);
+//       doc.text("KILOMETRAJE REGISTRADO", xActividad + 2, yPos + 4.5);
+//       [1,2,3,4].forEach((semanaNum, i) => {
+//         const xSem = xActividad + wActividad + (i * wSemana);
+//         doc.rect(xSem, yPos, wSemana, hFila);
+//         const km = historicoSemanas[semanaNum]?._kilometraje;
+//         if (km) doc.text(`${km} km`, xSem + (wSemana/2), yPos + 4.5, { align: 'center' });
+//       });
+//       yPos += (hFila + 10);
+
+//       // Nota y firmas
+//       if (yPos + 40 > pageHeight - 20) { doc.addPage(); yPos = 20; }
+//       doc.setFontSize(7); doc.setFont('helvetica','bold');
+//       const notaAviso = "NOTA: SI CUMPLISTE CON TODOS LOS REQUERIMIENTOS, MANEJA EL VEHÍCULO CON SEGURIDAD. SI ALGUNA DE TUS RESPUESTA FUE NO, CORRÍGELO EN COORDINACION CON TU JEFE INMEDIATO Y CON LA OFICINA DE SERVICIOS GENERALES";
+//       const textoDividido = doc.splitTextToSize(notaAviso, pageWidth - (margin * 2));
+//       doc.text(textoDividido, margin, yPos);
+//       yPos += (textoDividido.length * 4) + 15;
+//       doc.setFontSize(9);
+//       doc.text("RESPONSABLE DE LA REVISIÓN:", margin, yPos);
+//       doc.text("JEFE INMEDIATO:", pageWidth - margin - 80, yPos);
+//       yPos += 5;
+//       if (datos.firma) doc.addImage(datos.firma, 'PNG', margin, yPos, 50, 25);
+//       yPos += 25;
+//       doc.line(margin, yPos, margin + 70, yPos);
+//       doc.line(pageWidth - margin - 80, yPos, pageWidth - margin, yPos);
+//       yPos += 5;
+//       doc.setFont('helvetica','normal'); doc.setFontSize(8);
+//       doc.text(`Nombre: ${f.nombre || '____________________'}`, margin, yPos);
+//       doc.text(`RPE: ${f.rpe || '_______'}`, margin, yPos + 5);
+
+//       // Anexos fotográficos
+//       [1,2,3,4].forEach((semanaNum) => {
+//         const fotoData = historicoFotos[semanaNum];
+//         if (fotoData && fotoData.imagen) {
+//           doc.addPage();
+//           doc.setFontSize(14); doc.setFont('helvetica','bold');
+//           doc.text(`ANEXO: EVIDENCIA DE FALLOS - SEMANA ${semanaNum}`, margin, 20);
+//           doc.setFontSize(10); doc.setFont('helvetica','normal');
+//           doc.text(`Fecha captura: ${fotoData.hora || ''}`, margin, 30);
+//           doc.text(`Ubicación GPS: ${fotoData.direccion || ''}`, margin, 36);
+//           if (fotoData.coordenadas) doc.text(`Coordenadas: Lat ${fotoData.coordenadas.latitude}, Lon ${fotoData.coordenadas.longitude}`, margin, 42);
+//           doc.addImage(fotoData.imagen, 'JPEG', margin, 50, 160, 120);
+//         }
+//       });
+
+//       // Pie de página
+//       const totalPages = doc.internal.getNumberOfPages();
+//       for (let i = 1; i <= totalPages; i++) {
+//         doc.setPage(i);
+//         doc.setFontSize(8); doc.setTextColor(128);
+//         doc.text('Documento generado automáticamente por SeguridApp', pageWidth / 2, pageHeight - 8, { align: 'center' });
+//         doc.text(`ID: ${ID_GENERADO} - Pág ${i}/${totalPages}`, pageWidth / 2, pageHeight - 4, { align: 'center' });
+//       }
+
+//       doc.save(`Reporte_${ID_GENERADO}.pdf`);
+//       showNotification('✅ PDF generado correctamente', 'success');
+//     } catch (error) {
+//       console.error(error);
+//       showNotification('❌ Error al generar PDF', 'error');
+//     }
+//   };
+
+//   return (
+//     <div className="card text-center">
+//       <h2>🎉 Inspección de la Semana {datos.form?.semanaReporte || '1'} Finalizada</h2>
+//       <p className="text-gray-600 mb-6">Tu PDF guardará el historial para las próximas semanas.</p>
+//       <button onClick={generarPDF} className="btn btn-success btn-large">
+//         📄 Descargar Documento Oficial
+//       </button>
+//     </div>
+//   );
+// };
+
+// export default Reporte;
+
+
+
+
+
+
+
+
+
+
+
+
+import React from 'react';
+import { jsPDF } from 'jspdf';
+import { estructura } from './Checklist';
+
+const Reporte = ({ datos, historicoSemanas, historicoFotos, showNotification }) => {
+  const generarID = () => {
+    const t = (datos.direccion || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    let codigo = "SW000";
+    if (t.includes("montejo") || t.includes("alvarado") || t.includes("divisionales")) codigo = "SW000";
+    else if (t.includes("merida")) codigo = "SW010"; else if (t.includes("motul")) codigo = "SW020";
+    else if (t.includes("ticul")) codigo = "SW030"; else if (t.includes("campeche")) codigo = "SW040";
+    else if (t.includes("carmen")) codigo = "SW050"; else if (t.includes("chetumal")) codigo = "SW060";
+    else if (t.includes("tizimin")) codigo = "SW070"; else if (t.includes("cancun")) codigo = "SW120";
+    else if (t.includes("riviera") || t.includes("maya")) codigo = "SW200";
+    
+    const now = new Date();
+    return `${codigo}${String(now.getDate()).padStart(2,'0')}${String(now.getMonth()+1).padStart(2,'0')}${now.getFullYear()}${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+  };
+
+  const generarPDF = async () => {
+    try {
+      const ID_GENERADO = generarID();
+      const doc = new jsPDF('l', 'mm', 'a4'); // Formato Horizontal
+      const pageWidth = doc.internal.pageSize.getWidth(); // ~297mm
+      const pageHeight = doc.internal.pageSize.getHeight(); // ~210mm
+      const margin = 15;
+      let yPos = 15;
+      const f = datos.form || {};
+      
+      const estadoParaGuardar = JSON.stringify({ form: f, historicoSemanas, historicoFotos });
+      doc.setProperties({ title: `Reporte_${ID_GENERADO}`, keywords: estadoParaGuardar });
+
+      // Cabecera Oficial
+      doc.setFontSize(8); doc.text("Forma SH-209", pageWidth - margin, yPos, { align: 'right' }); yPos += 8;
+      doc.setFillColor(230, 230, 230); doc.rect(margin, yPos, 20, 20, 'F'); doc.rect(pageWidth - margin - 20, yPos, 20, 20, 'F');
+      doc.setFontSize(6); doc.text("SUTERM", margin + 10, yPos + 10, { align: 'center' }); doc.text("CFE", pageWidth - margin - 10, yPos + 10, { align: 'center' });
+      doc.setFontSize(14); doc.setFont('helvetica', 'bold'); doc.text("COMISION FEDERAL DE ELECTRICIDAD", pageWidth / 2, yPos + 4, { align: 'center' });
+      doc.setFontSize(12); doc.text("DIVISION DE DISTRIBUCION PENINSULAR", pageWidth / 2, yPos + 11, { align: 'center' });
+      doc.setFontSize(10); doc.text("VERIFICACION SEMANAL DE VEHÍCULO DE TRABAJO, PERSONAL OFICINA", pageWidth / 2, yPos + 18, { align: 'center' });
+      yPos += 30;
+
+      // Datos Generales
+      doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+      doc.text(`NO. ECO:`, margin, yPos); doc.setFont('helvetica', 'normal'); doc.text(`${f.noEco || '______'}`, margin + 20, yPos);
+      doc.setFont('helvetica', 'bold'); doc.text(`ÁREA O DEPTO:`, margin + 70, yPos); doc.setFont('helvetica', 'normal'); doc.text(`${f.area || '______'}`, margin + 100, yPos);
+      doc.setFont('helvetica', 'bold'); doc.text(`KILOMETRAJE INICIAL:`, margin + 180, yPos); doc.setFont('helvetica', 'normal'); doc.text(`${historicoSemanas[1]?._kilometraje || f.kilometraje || '______'}`, margin + 225, yPos);
+      yPos += 8;
+      doc.setFont('helvetica', 'bold'); doc.text(`PERIODO DE REVISIÓN:`, margin, yPos); doc.setFont('helvetica', 'normal'); doc.text(`${f.periodo || '______'}`, margin + 45, yPos);
+      doc.setFont('helvetica', 'bold'); doc.text(`MES:`, margin + 140, yPos); doc.setFont('helvetica', 'normal'); doc.text(`${f.mes || '___'}`, margin + 150, yPos);
+      doc.setFont('helvetica', 'bold'); doc.text(`AÑO:`, margin + 190, yPos); doc.setFont('helvetica', 'normal'); doc.text(`${f.anio || '___'}`, margin + 200, yPos);
+      yPos += 12;
+
+      // =======================================================
+      // CONSTRUCCIÓN DE LAS 6 COLUMNAS
+      // =======================================================
+      const anchoTotal = pageWidth - (margin * 2); // 267mm
+      const wActividad = 50; 
+      const wSemana = 36; // 36mm por semana x 4 = 144mm
+      const wOpcion = wSemana / 3; // 12mm por SI/NO/NA
+      const wComentarios = anchoTotal - wActividad - (wSemana * 4); // El resto (aprox 73mm) para comentarios
+      const hFila = 6.5; 
+      const xActividad = margin;
+
+      // ENCABEZADO DE TABLA
+      doc.setFillColor(220, 220, 220); 
+      doc.rect(xActividad, yPos, wActividad, hFila * 2, 'FD');
+      doc.setFont('helvetica', 'bold'); 
+      doc.text("ACTIVIDAD", xActividad + (wActividad/2), yPos + 8, { align: 'center' });
+      
+      // Columnas Semana 1 a 4
+      [1, 2, 3, 4].forEach((semanaNum, i) => { 
+        const xSem = xActividad + wActividad + (i * wSemana);
+        doc.setFillColor(220,220,220); 
+        doc.rect(xSem, yPos, wSemana, hFila, 'FD');
+        doc.text(`SEMANA ${semanaNum}`, xSem + (wSemana/2), yPos + 4.5, { align: 'center' });
+        
+        const ySub = yPos + hFila;
+        doc.setFillColor(235, 235, 235);
+        doc.rect(xSem, ySub, wOpcion, hFila, 'FD'); 
+        doc.rect(xSem + wOpcion, ySub, wOpcion, hFila, 'FD'); 
+        doc.rect(xSem + (wOpcion*2), ySub, wOpcion, hFila, 'FD');
+        
+        doc.setFontSize(8); doc.setTextColor(0,0,0);
+        doc.text("SI", xSem + (wOpcion/2), ySub + 4.5, { align: 'center' }); 
+        doc.text("NO", xSem + wOpcion + (wOpcion/2), ySub + 4.5, { align: 'center' }); 
+        doc.text("N/A", xSem + (wOpcion*2) + (wOpcion/2), ySub + 4.5, { align: 'center' });
+        doc.setFontSize(9);
+      });
+
+      // Columna 6: Comentarios
+      const xComentarios = xActividad + wActividad + (wSemana * 4);
+      doc.setFillColor(220, 220, 220);
+      doc.rect(xComentarios, yPos, wComentarios, hFila * 2, 'FD');
+      doc.text("COMENTARIOS", xComentarios + (wComentarios/2), yPos + 8, { align: 'center' });
+      
+      yPos += (hFila * 2);
+
+      // CUERPO DE LA TABLA
+      Object.entries(estructura).forEach(([nombreSeccion, itemsSeccion]) => {
+        if (yPos > pageHeight - 30) { doc.addPage(); yPos = 20; }
+        
+        // Fila separadora de sección (abarca todo el ancho)
+        doc.setFillColor(200,200,200); doc.setFont('helvetica','bold');
+        doc.rect(xActividad, yPos, anchoTotal, hFila, 'FD'); 
+        doc.text(nombreSeccion.toUpperCase(), xActividad + 2, yPos + 4.5); 
+        yPos += hFila;
+        
+        doc.setFont('helvetica','normal'); doc.setFontSize(8);
+        itemsSeccion.forEach((item) => {
+          if (yPos > pageHeight - 30) { doc.addPage(); yPos = 20; }
+          
+          // Col 1: Actividad
+          doc.rect(xActividad, yPos, wActividad, hFila);
+          doc.text(item, xActividad + 2, yPos + 4.5);
+          
+          let comentariosFila = [];
+
+          // Col 2 a 5: Semanas
+          [1, 2, 3, 4].forEach((semanaNum, i) => {
+            const xSem = xActividad + wActividad + (i * wSemana);
+            doc.rect(xSem, yPos, wOpcion, hFila); 
+            doc.rect(xSem + wOpcion, yPos, wOpcion, hFila); 
+            doc.rect(xSem + (wOpcion*2), yPos, wOpcion, hFila);
+            
+            const respuestaSemana = historicoSemanas[semanaNum]?.[item];
+            const obsSemana = historicoSemanas[semanaNum]?._observaciones?.[item];
+            
+            // Si hay un comentario en esta semana, lo guardamos para la columna 6
+            if (obsSemana) {
+              comentariosFila.push(`S${semanaNum}: ${obsSemana}`);
+            }
+
+            if (respuestaSemana) {
+              let xMark = xSem; let color = [200,200,200]; let texto = respuestaSemana;
+              if (respuestaSemana === "SI") color = [76,175,80];
+              else if (respuestaSemana === "NO") { xMark += wOpcion; color = [244,67,54]; }
+              else if (respuestaSemana === "NA") { xMark += (wOpcion*2); color = [255,152,0]; texto = "N/A"; }
+              
+              doc.setFillColor(...color); 
+              doc.rect(xMark + 0.5, yPos + 0.5, wOpcion - 1, hFila - 1, 'F');
+              doc.setTextColor(255,255,255); doc.setFont('helvetica','bold');
+              doc.text(texto, xMark + (wOpcion/2), yPos + 4.5, { align: 'center' });
+              doc.setTextColor(0,0,0); doc.setFont('helvetica','normal');
+            }
+          });
+
+          // Col 6: Comentarios
+          doc.rect(xComentarios, yPos, wComentarios, hFila);
+          if (comentariosFila.length > 0) {
+            let textoObs = comentariosFila.join(" | ");
+            // Si el texto es muy largo, lo recortamos un poco para que no se desborde
+            if (textoObs.length > 60) textoObs = textoObs.substring(0, 57) + "...";
+            doc.setFontSize(6);
+            doc.setTextColor(200, 50, 0); // Un tono rojizo para que resalte
+            doc.text(textoObs, xComentarios + 2, yPos + 4);
+            doc.setTextColor(0,0,0); doc.setFontSize(8);
+          }
+
+          yPos += hFila;
+        });
+      });
+
+      // =======================================================
+      // KILOMETRAJE Y FIRMAS
+      // =======================================================
+      if (yPos > pageHeight - 40) { doc.addPage(); yPos = 20; }
+      doc.setFillColor(230,230,230); doc.rect(xActividad, yPos, wActividad, hFila, 'FD');
+      doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.text("KILOMETRAJE REGISTRADO", xActividad + 2, yPos + 4.5);
+      
+      [1, 2, 3, 4].forEach((semanaNum, i) => {
+        const xSem = xActividad + wActividad + (i * wSemana);
+        doc.rect(xSem, yPos, wSemana, hFila);
+        const km = historicoSemanas[semanaNum]?._kilometraje;
+        if (km) doc.text(`${km} km`, xSem + (wSemana/2), yPos + 4.5, { align: 'center' });
+      });
+      // Celda vacía para comentarios de kilometraje
+      doc.rect(xComentarios, yPos, wComentarios, hFila);
+      yPos += (hFila + 15);
+
+      doc.setFontSize(7); doc.setFont('helvetica','bold');
+      const notaAviso = "NOTA: SI CUMPLISTE CON TODOS LOS REQUERIMIENTOS, MANEJA EL VEHÍCULO CON SEGURIDAD. SI ALGUNA DE TUS RESPUESTA FUE NO, CORRÍGELO EN COORDINACION CON TU JEFE INMEDIATO Y CON LA OFICINA DE SERVICIOS GENERALES";
+      const textoDividido = doc.splitTextToSize(notaAviso, pageWidth - (margin * 2));
+      doc.text(textoDividido, margin, yPos); yPos += (textoDividido.length * 4) + 15;
+      
+      doc.setFontSize(9); doc.text("RESPONSABLE DE LA REVISIÓN:", margin, yPos); doc.text("JEFE INMEDIATO:", pageWidth - margin - 80, yPos);
+      yPos += 5;
+      if (datos.firma) doc.addImage(datos.firma, 'PNG', margin, yPos, 50, 25);
+      yPos += 25;
+      doc.line(margin, yPos, margin + 70, yPos); doc.line(pageWidth - margin - 80, yPos, pageWidth - margin, yPos);
+      yPos += 5;
+      doc.setFont('helvetica','normal'); doc.setFontSize(8);
+      doc.text(`Nombre: ${f.nombre || '____________________'}`, margin, yPos); doc.text(`RPE: ${f.rpe || '_______'}`, margin, yPos + 5);
+
+      // =======================================================
+      // GALERÍA DE FOTOS (MOSAICO 2x2 EN HOJA HORIZONTAL)
+      // =======================================================
+      [1, 2, 3, 4].forEach((semanaNum) => {
+        const fotoData = historicoFotos[semanaNum];
+        if (fotoData && fotoData.capturas && Object.keys(fotoData.capturas).length > 0) {
+          const nombresFotos = Object.keys(fotoData.capturas);
+          doc.addPage();
+          doc.setFontSize(14); doc.setFont('helvetica','bold');
+          doc.text(`ANEXO: EVIDENCIA FOTOGRÁFICA - SEMANA ${semanaNum}`, margin, 20);
+          doc.setFontSize(9); doc.setFont('helvetica','normal');
+          doc.text(`Fecha captura: ${fotoData.hora || ''}`, margin, 28);
+          doc.text(`Ubicación GPS: ${fotoData.direccion || ''}`, margin, 34);
+          if (fotoData.coordenadas) doc.text(`Coordenadas: Lat ${fotoData.coordenadas.latitude}, Lon ${fotoData.coordenadas.longitude}`, margin, 40);
+          
+          let currentY = 50;
+          nombresFotos.forEach((nombre, index) => {
+            if (index > 0 && index % 4 === 0) { doc.addPage(); currentY = 20; }
+            
+            const isRightColumn = index % 2 !== 0; 
+            const xPos = isRightColumn ? 155 : margin;
+            const rowOnPage = Math.floor((index % 4) / 2); 
+            const yPosF = currentY + (rowOnPage * 75); 
+            
+            doc.setFontSize(10); doc.setFont('helvetica','bold');
+            doc.text(`Evidencia: ${nombre}`, xPos, yPosF);
+            
+            const imgData = fotoData.capturas[nombre];
+            doc.addImage(imgData, 'JPEG', xPos, yPosF + 3, 125, 65);
+          });
+        }
+      });
+
+      // Pie de página global
+      const totalPages = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i); doc.setFontSize(8); doc.setTextColor(128);
+        doc.text('Documento generado automáticamente por SeguridApp', pageWidth / 2, pageHeight - 8, { align: 'center' });
+        doc.text(`ID: ${ID_GENERADO} - Pág ${i}/${totalPages}`, pageWidth / 2, pageHeight - 4, { align: 'center' });
+      }
+
+      doc.save(`Reporte_${ID_GENERADO}.pdf`);
+      showNotification('✅ PDF generado correctamente', 'success');
+    } catch (error) { console.error(error); showNotification('❌ Error al generar PDF', 'error'); }
+  };
+
+  return (
+    <div className="card text-center">
+      <h2>🎉 Inspección Finalizada</h2>
+      <p className="text-gray-600 mb-6">El documento de revisión con las 4 semanas, observaciones y fotos está listo.</p>
+      <button onClick={generarPDF} className="btn btn-success btn-large">
+        📄 Descargar Documento Oficial
+      </button>
+    </div>
+  );
+};
+
+export default Reporte;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import React, { useState } from 'react';
+
+const Ubicacion = ({ onUbicacionObtenida, showNotification }) => {
+  const [cargando, setCargando] = useState(false);
+
+  const obtenerUbicacion = () => {
+    setCargando(true);
+    if (!navigator.geolocation) {
+      showNotification('Geolocalización no soportada por el navegador', 'error');
+      setCargando(false);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        const coordenadas = { lat: latitude, lng: longitude };
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+            { headers: { 'Accept-Language': 'es', 'User-Agent': 'SeguriApp/1.0' } }
+          );
+          const data = await response.json();
+          const direccion = data.display_name || 'Dirección no disponible';
+          onUbicacionObtenida(`Lat: ${latitude.toFixed(6)}, Lon: ${longitude.toFixed(6)}`, direccion, coordenadas);
+          showNotification('📍 Ubicación obtenida correctamente', 'success');
+        } catch (err) {
+          console.error(err);
+          onUbicacionObtenida(`Lat: ${latitude.toFixed(6)}, Lon: ${longitude.toFixed(6)}`, 'Error al obtener dirección', coordenadas);
+          showNotification('⚠️ Error al obtener dirección detallada', 'warning');
+        }
+        setCargando(false);
+      },
+      (err) => {
+        console.error(err);
+        showNotification('No se pudo obtener la ubicación. Verifica los permisos.', 'error');
+        setCargando(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
+  return (
+    <div className="card">
+      <h2 className="card-title">📍 Registrar Ubicación</h2>
+      <p className="text-gray-600 mb-4">Para registrar la ubicación exacta del incidente, necesitamos tu permiso de GPS.</p>
+      <button onClick={obtenerUbicacion} disabled={cargando} className="btn btn-success btn-large w-full">
+        {cargando ? '⏳ Obteniendo ubicación...' : '📍 Obtener Ubicación Actual'}
+      </button>
+      <div className="info-box mt-6">
+        <h3>¿Por qué necesitamos tu ubicación?</h3>
+        <ul>
+          <li>Registro exacto del lugar del reporte.</li>
+          <li>Cumplimiento de requisitos del formato oficial.</li>
+          <li>Evidencia georreferenciada de las revisiones.</li>
+        </ul>
+      </div>
+    </div>
+  );
+};
+
+export default Ubicacion;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import React, { useState, useEffect } from 'react';
+// import Notification from './components/Notification';
+// import DatosGenerales from './components/DatosGenerales';
+// import Checklist, { estructura } from './components/Checklist';
+// import Camara from './components/Camara';
+// import Ubicacion from './components/Ubicacion';
+// import Firma from './components/Firma';
+// // import Reporte from './Reporte';
+// import Reporte from './components/Reporte';
+
+// function App() {
+//   const [paso, setPaso] = useState(1);
+//   const [datosForm, setDatosForm] = useState({ semanaReporte: "1" });
+//   const [checklist, setChecklist] = useState({});
+//   const [datos, setDatos] = useState({ imagen: null, ubicacion: null, direccion: '', hora: '', firma: null, coordenadas: null });
+//   const [historicoSemanas, setHistoricoSemanas] = useState({ 1: {}, 2: {}, 3: {}, 4: {} });
+//   const [historicoFotos, setHistoricoFotos] = useState({});
+//   const [notification, setNotification] = useState(null);
+
+//   const showNotification = (message, type = 'error') => {
+//     setNotification({ message, type });
+//   };
+
+//   const actualizarDatos = (nuevos) => setDatos(prev => ({ ...prev, ...nuevos }));
+//   const actualizarDatosForm = (nuevos) => setDatosForm(prev => ({ ...prev, ...nuevos }));
+
+//   useEffect(() => {
+//     const sem = datosForm.semanaReporte || "1";
+//     setChecklist(historicoSemanas[sem] || {});
+//   }, [datosForm.semanaReporte, historicoSemanas]);
+
+//   const handleChecklistChange = (nuevoChecklist) => {
+//     setChecklist(nuevoChecklist);
+//   };
+
+//   const siguientePaso = () => {
+//     if (paso === 1) {
+//       const camposObligatorios = ['noEco', 'area', 'periodo', 'mes', 'anio', 'kilometraje', 'nombre', 'rpe'];
+//       const faltan = camposObligatorios.filter(campo => !datosForm[campo] || datosForm[campo].toString().trim() === '');
+//       if (faltan.length > 0) {
+//         showNotification(`FALTAN DATOS: ${faltan.join(', ')}`, 'warning');
+//         return;
+//       }
+//     }
+//     if (paso === 2) {
+//       const itemsTotales = Object.values(estructura).flat();
+//       const faltantes = itemsTotales.filter(item => !checklist[item]);
+//       if (faltantes.length > 0) {
+//         showNotification(`Faltan por contestar: ${faltantes.join(', ')}`, 'warning');
+//         return;
+//       }
+//       const hayObservaciones = Object.values(checklist).some(val => val === "NO" || val === "NA");
+//       if (!hayObservaciones) {
+//         actualizarDatos({ imagen: null });
+//         setPaso(4);
+//         return;
+//       }
+//     }
+//     if (paso === 3 && !datos.imagen) {
+//       showNotification('Como reportaste fallos, debes tomar la evidencia fotográfica.', 'warning');
+//       return;
+//     }
+//     if (paso === 4 && !datos.ubicacion) {
+//       showNotification('Registra tu ubicación GPS para continuar.', 'warning');
+//       return;
+//     }
+//     if (paso === 5 && !datos.firma) {
+//       showNotification('Debes guardar tu firma para continuar.', 'warning');
+//       return;
+//     }
+//     if (paso < 6) setPaso(p => p + 1);
+//   };
+
+//   const anteriorPaso = () => {
+//     if (paso === 2) setPaso(1);
+//     else if (paso === 3) setPaso(2);
+//     else if (paso === 4) {
+//       const hayObservaciones = Object.values(checklist).some(val => val === "NO" || val === "NA");
+//       if (!hayObservaciones) setPaso(2);
+//       else setPaso(3);
+//     }
+//   };
+
+//   const historicoSemanasActualizado = { ...historicoSemanas };
+//   historicoSemanasActualizado[datosForm.semanaReporte] = { ...checklist, _kilometraje: datosForm.kilometraje };
+//   const historicoFotosActualizado = { ...historicoFotos };
+//   if (datos.imagen) {
+//     historicoFotosActualizado[datosForm.semanaReporte] = {
+//       imagen: datos.imagen,
+//       hora: datos.hora,
+//       direccion: datos.direccion,
+//       coordenadas: datos.coordenadas
+//     };
+//   }
+
+//   return (
+//     <div className="app">
+//       {notification && <Notification {...notification} onClose={() => setNotification(null)} />}
+//       <header>
+//         <h1>SeguridApp</h1>
+//         <p className="subtitulo">Registro de Inspección CFE</p>
+//         <div className="progreso-container">
+//           <div className="progreso">
+//             <div className={`paso ${paso >= 1 ? 'activo' : ''}`}>1. Datos</div>
+//             <div className={`paso ${paso >= 2 ? 'activo' : ''}`}>2. Lista</div>
+//             <div className={`paso ${paso >= 3 ? 'activo' : ''} ${paso === 4 && !datos.imagen && paso > 2 ? 'saltado' : ''}`}>3. Foto</div>
+//             <div className={`paso ${paso >= 4 ? 'activo' : ''}`}>4. Ubic.</div>
+//             <div className={`paso ${paso >= 5 ? 'activo' : ''}`}>5. Firma</div>
+//             <div className={`paso ${paso >= 6 ? 'activo' : ''}`}>6. Fin</div>
+//           </div>
+//         </div>
+//       </header>
+
+//       <main className="contenido step-transition">
+//         {paso === 1 && (
+//           <DatosGenerales
+//             datos={datosForm}
+//             onChange={actualizarDatosForm}
+//             onCargarDatos={(datosExtraidos) => {
+//               const histSem = datosExtraidos.historicoSemanas || { 1: {}, 2: {}, 3: {}, 4: {} };
+//               let siguienteSemana = "1";
+//               if (Object.keys(histSem[1] || {}).length > 1) siguienteSemana = "2";
+//               if (Object.keys(histSem[2] || {}).length > 1) siguienteSemana = "3";
+//               if (Object.keys(histSem[3] || {}).length > 1) siguienteSemana = "4";
+//               setDatosForm({ ...(datosExtraidos.form || {}), semanaReporte: siguienteSemana, kilometraje: "" });
+//               setHistoricoSemanas(histSem);
+//               setHistoricoFotos(datosExtraidos.historicoFotos || {});
+//             }}
+//             showNotification={showNotification}
+//           />
+//         )}
+//         {paso === 2 && <Checklist onChange={handleChecklistChange} datosPrevios={checklist} />}
+//         {paso === 3 && (
+//           <div className="fade-in">
+//             <div className="alerta-foto">📸 Evidencia Obligatoria por reporte de fallos.</div>
+//             <Camara onCapture={(imagen, hora) => actualizarDatos({ imagen, hora })} />
+//           </div>
+//         )}
+//         {paso === 4 && <Ubicacion onUbicacionObtenida={(ubicacion, direccion, coordenadas) => actualizarDatos({ ubicacion, direccion, coordenadas })} showNotification={showNotification} />}
+//         {paso === 5 && <Firma onFirmaCompletada={(firma) => actualizarDatos({ firma })} showNotification={showNotification} />}
+//         {paso === 6 && (
+//           <Reporte
+//             datos={{ ...datos, form: datosForm }}
+//             historicoSemanas={historicoSemanasActualizado}
+//             historicoFotos={historicoFotosActualizado}
+//             showNotification={showNotification}
+//           />
+//         )}
+
+//         <div className="navegacion">
+//           {(paso === 2 || paso === 3 || (paso === 4 && !datos.imagen)) && (
+//             <button onClick={anteriorPaso} className="btn btn-secondary">← Regresar</button>
+//           )}
+//           {paso !== 2 && paso !== 3 && !(paso === 4 && !datos.imagen) && <div></div>}
+//           {paso < 6 && (
+//             <button onClick={siguientePaso} className="btn btn-primary">Siguiente →</button>
+//           )}
+//         </div>
+//       </main>
+
+//       <style>{`
+//         * { box-sizing: border-box; margin: 0; padding: 0; }
+//         body { background: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+//         .app { padding: 15px; max-width: 800px; margin: 0 auto; min-height: 100vh; }
+//         header { text-align: center; margin-bottom: 25px; }
+//         h1 { color: #1a365d; font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; }
+//         .subtitulo { color: #4a5568; font-size: 1rem; margin-top: 5px; }
+//         .progreso-container { overflow-x: auto; margin-top: 15px; }
+//         .progreso { display: flex; gap: 6px; background: #e2e8f0; padding: 6px; border-radius: 40px; }
+//         .paso { flex: 1; padding: 8px 4px; text-align: center; border-radius: 30px; font-size: 0.8rem; font-weight: 600; background: white; color: #2d3748; transition: all 0.3s; white-space: nowrap; }
+//         .paso.activo { background: #2196F3; color: white; box-shadow: 0 4px 10px rgba(33,150,243,0.3); }
+//         .paso.saltado { background: #90cdf4; color: #1e3a8a; opacity: 0.8; }
+//         .contenido { background: white; padding: 25px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 20px; }
+//         .step-transition { animation: fadeSlide 0.4s ease-out; }
+//         @keyframes fadeSlide {
+//           from { opacity: 0; transform: translateY(10px); }
+//           to { opacity: 1; transform: translateY(0); }
+//         }
+//         @keyframes slideDown {
+//           from { opacity: 0; transform: translate(-50%, -20px); }
+//           to { opacity: 1; transform: translate(-50%, 0); }
+//         }
+//         .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+//         .card-title { font-size: 1.4rem; font-weight: 600; color: #1a365d; margin-bottom: 20px; border-left: 5px solid #2196F3; padding-left: 15px; }
+//         .btn { padding: 12px 20px; border: none; border-radius: 40px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+//         .btn-primary { background: #2196F3; color: white; box-shadow: 0 4px 10px rgba(33,150,243,0.3); }
+//         .btn-primary:hover { background: #1976D2; transform: translateY(-2px); }
+//         .btn-secondary { background: #e2e8f0; color: #2d3748; }
+//         .btn-secondary:hover { background: #cbd5e0; }
+//         .btn-success { background: #4CAF50; color: white; box-shadow: 0 4px 10px rgba(76,175,80,0.3); }
+//         .btn-success:hover { background: #43a047; transform: translateY(-2px); }
+//         .btn-large { padding: 15px 30px; font-size: 1.1rem; width: 100%; }
+//         .flex { display: flex; gap: 15px; }
+//         .flex-col { flex-direction: column; }
+//         .gap-4 { gap: 16px; }
+//         .mt-4 { margin-top: 16px; }
+//         .mt-6 { margin-top: 24px; }
+//         .mb-4 { margin-bottom: 16px; }
+//         .text-center { text-align: center; }
+//         .w-full { width: 100%; }
+//         .info-box { background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; }
+//         .info-box h3 { color: #0d47a1; margin-bottom: 10px; font-size: 1.1rem; }
+//         .info-box ul { padding-left: 20px; color: #2c3e50; }
+//         .camera-preview { border: 2px solid #e2e8f0; border-radius: 20px; overflow: hidden; background: #f1f5f9; }
+//         .tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 20px; }
+//         .tab { padding: 8px 16px; border: none; border-radius: 40px; background: #f1f5f9; color: #334155; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+//         .tab.active { background: #2196F3; color: white; }
+//         .tab.complete { background: #c8e6c9; color: #2e7d32; }
+//         .checklist-section { background: #ffffff; border-radius: 16px; padding: 10px; }
+//         .checklist-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #edf2f7; }
+//         .checklist-item span { font-weight: 500; color: #1e293b; }
+//         .option-buttons { display: flex; gap: 6px; }
+//         .option-buttons button { padding: 8px 16px; border: none; border-radius: 30px; font-weight: 600; cursor: pointer; transition: 0.2s; min-width: 60px; }
+//         .navigation-buttons { display: flex; justify-content: space-between; margin-top: 25px; }
+//         .pdf-upload { background: #e3f2fd; padding: 20px; border-radius: 16px; text-align: center; margin-bottom: 30px; border: 2px dashed #2196F3; }
+//         .pdf-upload h3 { color: #1565C0; margin-bottom: 8px; }
+//         .file-label { cursor: pointer; display: inline-block; }
+//         .file-label input { display: none; }
+//         .semana-selector { background: #fff8e1; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid #ffb74d; }
+//         .semana-selector label { font-weight: 600; color: #f57f17; display: block; margin-bottom: 5px; }
+//         .semana-selector select { width: 100%; padding: 10px; border: 1px solid #ffe082; border-radius: 8px; font-weight: 500; }
+//         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+//         .form-group { display: flex; flex-direction: column; }
+//         .form-group.full-width { grid-column: 1 / -1; }
+//         .form-group label { font-weight: 600; color: #2d3748; margin-bottom: 5px; font-size: 0.9rem; }
+//         .form-group input { padding: 10px; border: 1px solid #cbd5e0; border-radius: 10px; font-size: 1rem; transition: border 0.2s; }
+//         .form-group input:focus { outline: none; border-color: #2196F3; box-shadow: 0 0 0 3px rgba(33,150,243,0.1); }
+//         hr { margin: 25px 0; border: none; border-top: 2px solid #e2e8f0; }
+//         .signature-pad { border: 2px solid #e2e8f0; border-radius: 16px; padding: 8px; background: white; margin-bottom: 16px; }
+//         .signature-canvas { width: 100%; height: 200px; border-radius: 12px; }
+//         .success-message { background: #d4edda; color: #155724; padding: 12px; border-radius: 40px; margin-top: 16px; text-align: center; }
+//         .alerta-foto { background: #fff3cd; color: #856404; padding: 12px; border-radius: 40px; margin-bottom: 20px; border-left: 4px solid #ffeeba; font-weight: 500; }
+//         .navegacion { display: flex; justify-content: space-between; margin-top: 30px; gap: 15px; }
+//         @media (max-width: 640px) {
+//           .contenido { padding: 15px; }
+//           .form-grid { grid-template-columns: 1fr; }
+//           .option-buttons { flex-wrap: wrap; }
+//           .checklist-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+//           .navegacion { flex-direction: column-reverse; }
+//           .btn { width: 100%; }
+//         }
+//       `}</style>
+//     </div>
+//   );
+// }
+
+// export default App;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import React, { useState, useEffect } from 'react';
+import Home from './components/Home';
+import DatosGenerales from './components/DatosGenerales';
+import Checklist, { estructura } from './components/Checklist';
+import Camara from './components/Camara';
+import Ubicacion from './components/Ubicacion';
+import Firma from './components/Firma';
+import Reporte from './components/Reporte';
+
+function App() {
+  // ESTADOS PRINCIPALES
+  const [moduloActivo, setModuloActivo] = useState(null); 
+  const [paso, setPaso] = useState(1); 
+  const [datosForm, setDatosForm] = useState({ semanaReporte: "1" }); 
+  const [checklist, setChecklist] = useState({});
+  const [datos, setDatos] = useState({ imagen: null, ubicacion: null, direccion: '', hora: '', firma: null, coordenadas: null });
+
+  // HISTÓRICOS Y NOTIFICACIONES
+  const [historicoSemanas, setHistoricoSemanas] = useState({ 1: {}, 2: {}, 3: {}, 4: {} });
+  const [historicoFotos, setHistoricoFotos] = useState({});
+  const [notification, setNotification] = useState(null);
+
+  // ESTADOS DEL POP-UP INTERMEDIO (VERIFICACIONES PREVIAS)
+  const [mostrarModal, setMostrarModal] = useState(false);
+  const [verificaciones, setVerificaciones] = useState({
+    seguroVigente: false, tarjetaCombustible: false, licenciaVigente: false, fechaLicencia: ''
+  });
+
+  const showNotification = (message, type = 'error') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 4000); // Se oculta sola a los 4 seg
+  };
+
+  const actualizarDatos = (nuevos) => setDatos(prev => ({ ...prev, ...nuevos }));
+  const actualizarDatosForm = (nuevos) => setDatosForm(prev => ({ ...prev, ...nuevos }));
+
+  useEffect(() => {
+    const sem = datosForm.semanaReporte || "1";
+    setChecklist(historicoSemanas[sem] || {});
+  }, [datosForm.semanaReporte, historicoSemanas]);
+
+  const handleChecklistChange = (nuevoChecklist) => setChecklist(nuevoChecklist);
+
+  // =========================================================
+  // LOGICA DEL BOTÓN SIGUIENTE (Y EL POP-UP)
+  // =========================================================
+  const siguientePaso = () => {
+    // PASO 1: DATOS GENERALES
+    if (paso === 1) {
+      const camposObligatorios = ['noEco', 'area', 'periodo', 'mes', 'anio', 'kilometraje', 'nombre', 'rpe'];
+      const faltan = camposObligatorios.filter(campo => !datosForm[campo] || datosForm[campo].toString().trim() === '');
+      
+      if (faltan.length > 0) {
+        showNotification(`Faltan campos por llenar: ${faltan.join(', ')}`, 'warning');
+        return;
+      }
+      
+      // SI TODO ESTÁ LLENO, NO PASAMOS AL CHECKLIST AÚN, ABRIMOS EL POP-UP
+      setMostrarModal(true);
+      return;
+    }
+
+    // PASO 2: CHECKLIST
+    if (paso === 2) {
+      const itemsTotales = Object.values(estructura).flat();
+      const faltantes = itemsTotales.filter(item => !checklist[item]);
+
+      if (faltantes.length > 0) {
+        showNotification(`Faltan por contestar: ${faltantes.length} items`, 'warning');
+        return; 
+      }
+      const hayObservaciones = Object.values(checklist).some(val => val === "NO" || val === "NA");
+      if (!hayObservaciones) {
+        actualizarDatos({ imagen: null }); 
+        setPaso(4); 
+        return;
+      }
+    }
+
+    // PASO 3, 4 y 5
+    if (paso === 3 && !datos.imagen) { showNotification('Debes tomar la evidencia fotográfica.', 'warning'); return; }
+    if (paso === 4 && !datos.ubicacion) { showNotification('Registra tu ubicación GPS.', 'warning'); return; }
+    if (paso === 5 && !datos.firma) { showNotification('Debes guardar tu firma.', 'warning'); return; }
+
+    if (paso < 6) setPaso(p => p + 1);
+  };
+
+  // =========================================================
+  // VALIDACIÓN MATEMÁTICA DEL POP-UP DE SEGURIDAD
+  // =========================================================
+  const handleCheckModal = (e) => {
+    const { name, value, type, checked } = e.target;
+    setVerificaciones(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  };
+
+  const confirmarVerificaciones = () => {
+    if (!verificaciones.seguroVigente || !verificaciones.tarjetaCombustible || !verificaciones.licenciaVigente) {
+      showNotification('⚠️ Debes confirmar la Póliza, Tarjeta y Licencia para continuar.', 'warning');
+      return;
+    }
+    if (!verificaciones.fechaLicencia) {
+      showNotification('⚠️ Ingresa la fecha de vencimiento de tu licencia.', 'warning');
+      return;
+    }
+
+    // Calcular si la licencia está vencida
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0); 
+    const [year, month, day] = verificaciones.fechaLicencia.split('-');
+    const fechaLic = new Date(year, month - 1, day);
+    const diffTime = fechaLic - hoy;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+      showNotification('❌ TU LICENCIA ESTÁ VENCIDA. No puedes continuar.', 'error');
+      return; // BLOQUEA EL AVANCE
+    } else if (diffDays <= 7) {
+      showNotification(`⚠️ ADVERTENCIA: Tu licencia vence en ${diffDays} día(s).`, 'warning');
+    } else {
+      showNotification('✅ Todo en orden. Iniciando Checklist.', 'success');
+    }
+
+    // Si todo está bien, cerramos modal, guardamos las verificaciones y pasamos al Checklist
+    setDatosForm(prev => ({ ...prev, ...verificaciones }));
+    setMostrarModal(false);
+    setPaso(2);
+  };
+
+  // =========================================================
+  // NAVEGACIÓN HACIA ATRÁS
+  // =========================================================
+  const anteriorPaso = () => {
+    if (paso === 2) setPaso(1);
+    else if (paso === 3) setPaso(2);
+    else if (paso === 4) {
+       const hayObservaciones = Object.values(checklist).some(val => val === "NO" || val === "NA");
+       if (!hayObservaciones) setPaso(2);
+       else setPaso(3);
+    }
+  };
+
+  const historicoSemanasActualizado = { ...historicoSemanas };
+  historicoSemanasActualizado[datosForm.semanaReporte] = { ...checklist, _kilometraje: datosForm.kilometraje };
+  
+  const historicoFotosActualizado = { ...historicoFotos };
+  if (datos.imagen) {
+    historicoFotosActualizado[datosForm.semanaReporte] = {
+      imagen: datos.imagen, hora: datos.hora, direccion: datos.direccion, coordenadas: datos.coordenadas
+    };
+  }
+
+  // =========================================================
+  // RENDERIZADO VISUAL
+  // =========================================================
+  if (!moduloActivo) {
+    return (
+      <div className="app" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <Home onSelectModule={setModuloActivo} showNotification={showNotification} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="app">
+      {/* Componente simple de Notificaciones Flotantes */}
+      {notification && (
+        <div style={{
+          position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 9999,
+          background: notification.type === 'error' ? '#f44336' : notification.type === 'warning' ? '#ff9800' : '#4CAF50',
+          color: 'white', padding: '15px 25px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+          fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px', animation: 'slideDown 0.3s ease-out'
+        }}>
+          {notification.message}
+          <button onClick={() => setNotification(null)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', fontSize: '1.2rem', marginLeft: '10px' }}>✖</button>
+        </div>
+      )}
+
+      {/* POP-UP DE VERIFICACIONES (Aparece al dar 'Siguiente' en el Paso 1) */}
+      {mostrarModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+          <div style={{ background: 'white', padding: '30px', borderRadius: '16px', maxWidth: '500px', width: '100%', textAlign: 'left', animation: 'slideDown 0.3s ease-out' }}>
+            <h3 style={{ color: '#856404', marginTop: 0, marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '2px solid #ffeeba', paddingBottom: '10px' }}>
+              <span>⚠️</span> Verificaciones Previas Obligatorias
+            </h3>
+            <p style={{ fontSize: '0.95rem', color: '#555', marginBottom: '20px' }}>
+              Antes de proceder al llenado del Checklist, confirma los siguientes requisitos:
+            </p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '25px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 'bold', color: '#333', background: '#f8f9fa', padding: '10px', borderRadius: '8px' }}>
+                <input type="checkbox" name="seguroVigente" checked={verificaciones.seguroVigente} onChange={handleCheckModal} style={{ width: '20px', height: '20px' }} />
+                Póliza de seguro vigente
+              </label>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 'bold', color: '#333', background: '#f8f9fa', padding: '10px', borderRadius: '8px' }}>
+                <input type="checkbox" name="tarjetaCombustible" checked={verificaciones.tarjetaCombustible} onChange={handleCheckModal} style={{ width: '20px', height: '20px' }} />
+                Tarjeta de combustible (Cuento con fotografía)
+              </label>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 'bold', color: '#333', background: '#f8f9fa', padding: '10px', borderRadius: '8px' }}>
+                <input type="checkbox" name="licenciaVigente" checked={verificaciones.licenciaVigente} onChange={handleCheckModal} style={{ width: '20px', height: '20px' }} />
+                Licencia vigente del trabajador (Me hago responsable)
+              </label>
+
+              {verificaciones.licenciaVigente && (
+                <div style={{ marginLeft: '10px', padding: '15px', background: '#e3f2fd', borderRadius: '8px', border: '1px solid #90caf9', animation: 'fadeIn 0.3s' }}>
+                  <label style={{ display: 'block', fontSize: '0.9rem', color: '#1565c0', marginBottom: '8px', fontWeight: 'bold' }}>
+                    Fecha de vencimiento de tu licencia:
+                  </label>
+                  <input type="date" name="fechaLicencia" value={verificaciones.fechaLicencia} onChange={handleCheckModal} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #ccc', width: '100%', fontSize: '1rem' }} />
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setMostrarModal(false)} style={{ padding: '12px 20px', background: '#e2e8f0', color: '#4a5568', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
+                Cancelar
+              </button>
+              <button onClick={confirmarVerificaciones} style={{ padding: '12px 20px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 6px rgba(76, 175, 80, 0.3)' }}>
+                Confirmar e Iniciar Revisión
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <header>
+        <button 
+          onClick={() => { 
+            if(window.confirm("¿Seguro que quieres salir al menú principal? Los datos no guardados se perderán.")) {
+              setModuloActivo(null); setPaso(1); setDatosForm({ semanaReporte: "1" }); setChecklist({});
+            }
+          }} 
+          style={{ position: 'absolute', top: '0px', left: '0px', background: '#e2e8f0', border: 'none', borderRadius: '50%', width: '40px', height: '40px', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}
+          title="Volver al Menú Principal"
+        >🏠</button>
+
+        <h1>SeguridApp</h1>
+        <p className="subtitulo">Registro de Inspección CFE</p>
+        <div className="progreso-container">
+          <div className="progreso">
+            <div className={`paso ${paso >= 1 ? 'activo' : ''}`}>1. Datos</div>
+            <div className={`paso ${paso >= 2 ? 'activo' : ''}`}>2. Lista</div>
+            <div className={`paso ${paso >= 3 ? 'activo' : ''} ${paso === 4 && !datos.imagen && paso > 2 ? 'saltado' : ''}`}>3. Foto</div>
+            <div className={`paso ${paso >= 4 ? 'activo' : ''}`}>4. Ubic.</div>
+            <div className={`paso ${paso >= 5 ? 'activo' : ''}`}>5. Firma</div>
+            <div className={`paso ${paso >= 6 ? 'activo' : ''}`}>6. Fin</div>
+          </div>
+        </div>
+      </header>
+
+      <main className="contenido step-transition">
+        {paso === 1 && (
+          <DatosGenerales
+            datos={datosForm}
+            onChange={actualizarDatosForm}
+            onCargarDatos={(datosExtraidos) => {
+              // CÓDIGO OCULTO DE CARGA DE PDF SIGUE VIVO AQUÍ ADENTRO PARA FUTURO USO
+              const histSem = datosExtraidos.historicoSemanas || { 1: {}, 2: {}, 3: {}, 4: {} };
+              let siguienteSemana = "1";
+              if (Object.keys(histSem[1] || {}).length > 1) siguienteSemana = "2";
+              if (Object.keys(histSem[2] || {}).length > 1) siguienteSemana = "3";
+              if (Object.keys(histSem[3] || {}).length > 1) siguienteSemana = "4";
+              setDatosForm(prev => ({ ...prev, ...(datosExtraidos.form || {}), semanaReporte: siguienteSemana, kilometraje: "" }));
+              setHistoricoSemanas(histSem);
+              setHistoricoFotos(datosExtraidos.historicoFotos || {});
+            }}
+            showNotification={showNotification}
+          />
+        )}
+        
+        {paso === 2 && <Checklist onChange={handleChecklistChange} datosPrevios={checklist} />}
+        
+        {paso === 3 && (
+          <div className="fade-in">
+            <div className="alerta-foto">📸 Evidencia Obligatoria por reporte de fallos.</div>
+            <Camara onCapture={(imagen, hora) => actualizarDatos({ imagen, hora })} />
+          </div>
+        )}
+        
+        {paso === 4 && <Ubicacion onUbicacionObtenida={(ubicacion, direccion, coordenadas) => actualizarDatos({ ubicacion, direccion, coordenadas })} showNotification={showNotification} />}
+        
+        {paso === 5 && <Firma onFirmaCompletada={(firma) => actualizarDatos({ firma })} showNotification={showNotification} />}
+        
+        {paso === 6 && (
+          <Reporte
+            datos={{ ...datos, form: datosForm }}
+            historicoSemanas={historicoSemanasActualizado}
+            historicoFotos={historicoFotosActualizado}
+            showNotification={showNotification}
+          />
+        )}
+
+        <div className="navegacion">
+          {(paso === 2 || paso === 3 || (paso === 4 && !datos.imagen)) && (
+            <button onClick={anteriorPaso} className="btn btn-secondary">← Regresar</button>
+          )}
+          {paso !== 2 && paso !== 3 && !(paso === 4 && !datos.imagen) && <div></div>}
+          {paso < 6 && (
+            <button onClick={siguientePaso} className="btn btn-primary">Siguiente →</button>
+          )}
+        </div>
+      </main>
+
+      <style>{`
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .app { padding: 15px; max-width: 800px; margin: 0 auto; min-height: 100vh; position: relative; }
+        header { text-align: center; margin-bottom: 25px; position: relative; }
+        h1 { color: #1a365d; font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; margin-top: 10px; }
+        .subtitulo { color: #4a5568; font-size: 1rem; margin-top: 5px; }
+        .progreso-container { overflow-x: auto; margin-top: 15px; }
+        .progreso { display: flex; gap: 6px; background: #e2e8f0; padding: 6px; border-radius: 40px; }
+        .paso { flex: 1; padding: 8px 4px; text-align: center; border-radius: 30px; font-size: 0.8rem; font-weight: 600; background: white; color: #2d3748; transition: all 0.3s; white-space: nowrap; }
+        .paso.activo { background: #2196F3; color: white; box-shadow: 0 4px 10px rgba(33,150,243,0.3); }
+        .paso.saltado { background: #90cdf4; color: #1e3a8a; opacity: 0.8; }
+        .contenido { background: white; padding: 25px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .step-transition { animation: fadeSlide 0.4s ease-out; }
+        @keyframes fadeSlide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideDown { from { opacity: 0; transform: translate(-50%, -20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .card-title { font-size: 1.4rem; font-weight: 600; color: #1a365d; margin-bottom: 20px; border-left: 5px solid #2196F3; padding-left: 15px; }
+        .btn { padding: 12px 20px; border: none; border-radius: 40px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary { background: #2196F3; color: white; box-shadow: 0 4px 10px rgba(33,150,243,0.3); }
+        .btn-primary:hover { background: #1976D2; transform: translateY(-2px); }
+        .btn-secondary { background: #e2e8f0; color: #2d3748; }
+        .btn-secondary:hover { background: #cbd5e0; }
+        .btn-success { background: #4CAF50; color: white; box-shadow: 0 4px 10px rgba(76,175,80,0.3); }
+        .btn-success:hover { background: #43a047; transform: translateY(-2px); }
+        .btn-large { padding: 15px 30px; font-size: 1.1rem; width: 100%; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        .form-group label { font-weight: 600; color: #2d3748; margin-bottom: 5px; font-size: 0.9rem; }
+        .form-group input, .form-group select { padding: 10px; border: 1px solid #cbd5e0; border-radius: 10px; font-size: 1rem; transition: border 0.2s; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #2196F3; box-shadow: 0 0 0 3px rgba(33,150,243,0.1); }
+        hr { margin: 25px 0; border: none; border-top: 2px solid #e2e8f0; }
+        .alerta-foto { background: #fff3cd; color: #856404; padding: 12px; border-radius: 40px; margin-bottom: 20px; border-left: 4px solid #ffeeba; font-weight: 500; }
+        .navegacion { display: flex; justify-content: space-between; margin-top: 30px; gap: 15px; }
+        @media (max-width: 640px) { .contenido { padding: 15px; } .form-grid { grid-template-columns: 1fr; } .navegacion { flex-direction: column-reverse; } .btn { width: 100%; } }
+      `}</style>
+    </div>
+  );
+}
+
+export default App;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
