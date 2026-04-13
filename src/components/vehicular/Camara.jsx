@@ -36,7 +36,6 @@
 //   };
 
 //   if (!fotosRequeridas || fotosRequeridas.length === 0) return <div>Cargando cámara...</div>;
-
 //   const progreso = Math.round((Object.keys(capturas).length / fotosRequeridas.length) * 100);
 
 //   return (
@@ -92,6 +91,10 @@
 // };
 
 // export default Camara;
+
+
+
+
 
 
 
@@ -165,12 +168,18 @@ const Camara = ({ onCapture, fotosRequeridas }) => {
             </div>
 
             {capturas[fotoActiva] ? (
-              <img src={capturas[fotoActiva]} alt="Captura" className="w-full h-auto rounded-lg" style={{ display: 'block' }} />
+              <img src={capturas[fotoActiva]} alt="Captura" className="w-full h-auto rounded-lg" style={{ display: 'block', objectFit: 'cover' }} />
             ) : (
               <Webcam
                 audio={false} ref={webcamRef} screenshotFormat="image/jpeg" className="w-full h-auto rounded-lg"
-                videoConstraints={{ facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }}
-                style={{ width: '100%', height: 'auto', display: 'block' }}
+                // CORRECCIÓN: Fuerza al teléfono a mandar la foto en panorámico (16:9)
+                videoConstraints={{ 
+                  facingMode: 'environment', 
+                  width: { ideal: 1280 }, 
+                  height: { ideal: 720 },
+                  aspectRatio: 16/9 
+                }}
+                style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }}
               />
             )}
           </div>

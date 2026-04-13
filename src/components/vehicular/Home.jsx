@@ -1,6 +1,12 @@
 // import React from 'react';
 
 // const Home = ({ onSelectModule }) => {
+//   const btnInactivoStyle = {
+//     background: '#f1f5f9', color: '#94a3b8', padding: '15px', borderRadius: '16px',
+//     fontSize: '1.1rem', fontWeight: 'bold', border: '2px dashed #cbd5e1', cursor: 'not-allowed',
+//     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+//   };
+
 //   return (
 //     <div className="card text-center" style={{ maxWidth: '600px', margin: '40px auto', padding: '40px 20px' }}>
 //       <h1 style={{ color: '#1a365d', fontSize: '2.2rem', marginBottom: '10px' }}>SeguridApp CFE</h1>
@@ -39,13 +45,9 @@
 //   );
 // };
 
-// const btnInactivoStyle = {
-//   background: '#f1f5f9', color: '#94a3b8', padding: '15px', borderRadius: '16px',
-//   fontSize: '1.1rem', fontWeight: 'bold', border: '2px dashed #cbd5e1', cursor: 'not-allowed',
-//   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
-// };
-
 // export default Home;
+
+
 
 
 
@@ -76,10 +78,21 @@ const Home = ({ onSelectModule }) => {
             boxShadow: '0 4px 10px rgba(33,150,243,0.3)', transition: 'transform 0.2s',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
           }}
-          onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
-          onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
         >
-          <span style={{ fontSize: '1.5rem' }}>🚗</span> Inspección de Vehículos Oficiales
+          <span style={{ fontSize: '1.5rem' }}>🚗</span> Inspección de Vehículos
+        </button>
+
+        {/* ¡BOTÓN ACTIVADO! */}
+        <button
+          onClick={() => onSelectModule('edificios')}
+          style={{
+            background: '#4CAF50', color: 'white', padding: '20px', borderRadius: '16px',
+            fontSize: '1.1rem', fontWeight: 'bold', border: 'none', cursor: 'pointer',
+            boxShadow: '0 4px 10px rgba(76,175,80,0.3)', transition: 'transform 0.2s',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
+          }}
+        >
+          <span style={{ fontSize: '1.5rem' }}>🏢</span> Inspección de Edificios
         </button>
 
         <button disabled style={btnInactivoStyle}>
@@ -87,11 +100,7 @@ const Home = ({ onSelectModule }) => {
         </button>
 
         <button disabled style={btnInactivoStyle}>
-          <span style={{ fontSize: '1.5rem' }}>📋</span> Módulo 3 <br/><span style={{ fontSize: '0.8rem', fontWeight: 'normal' }}>(En desarrollo)</span>
-        </button>
-
-        <button disabled style={btnInactivoStyle}>
-          <span style={{ fontSize: '1.5rem' }}>🏗️</span> Módulo 4 <br/><span style={{ fontSize: '0.8rem', fontWeight: 'normal' }}>(En desarrollo)</span>
+          <span style={{ fontSize: '1.5rem' }}>📋</span> Botiquines <br/><span style={{ fontSize: '0.8rem', fontWeight: 'normal' }}>(En desarrollo)</span>
         </button>
       </div>
     </div>

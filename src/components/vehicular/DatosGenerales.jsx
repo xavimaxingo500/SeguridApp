@@ -1,11 +1,12 @@
 // import React, { useState, useEffect } from 'react';
 // import { PDFDocument } from 'pdf-lib';
 
+// // Lista actualizada sin "Grandes Clientes"
 // const AREAS_CFE = [
 //   "Recursos Humanos", "CAC Oriente", "CAC Poniente", "CAC Norte", "CAC Sur",
 //   "CAC Centro", "CAC Progreso", "CAC Uman", "CAC Conkal", "CAC Hunucma",
 //   "CAC Acanceh", "CAC Caucel", "Facturación", "Cobranza", "Notificaciones",
-//   "T.I.", "Grandes Clientes"
+//   "T.I."
 // ];
 
 // const DatosGenerales = ({ datos, onChange, onCargarDatos, showNotification }) => {
@@ -41,7 +42,7 @@
 //     const val = e.target.value;
 //     if (val === 'Otros') {
 //       setMostrarOtro(true);
-//       onChange({ area: '' }); 
+//       onChange({ area: '' });
 //     } else {
 //       setMostrarOtro(false);
 //       onChange({ area: val }); 
@@ -73,7 +74,6 @@
 
 //   return (
 //     <div className="card">
-//       {/* DISEÑO ORIGINAL DE SUBIR ARCHIVO RESTAURADO */}
 //       <div style={{ background: '#E3F2FD', padding: '20px', borderRadius: '12px', marginBottom: '30px', textAlign: 'center', border: '2px dashed #2196F3' }}>
 //         <h3 style={{ margin: '0 0 10px 0', color: '#1565C0', fontSize: '1.2rem' }}>📂 ¿Continuar reporte de la semana pasada?</h3>
 //         <p style={{ fontSize: '0.9rem', color: '#555', marginBottom: '15px' }}>
@@ -144,15 +144,18 @@
 
 // export default DatosGenerales;
 
+
+
+
+
+
 import React, { useState, useEffect } from 'react';
 import { PDFDocument } from 'pdf-lib';
 
-// Lista actualizada sin "Grandes Clientes"
 const AREAS_CFE = [
   "Recursos Humanos", "CAC Oriente", "CAC Poniente", "CAC Norte", "CAC Sur",
   "CAC Centro", "CAC Progreso", "CAC Uman", "CAC Conkal", "CAC Hunucma",
-  "CAC Acanceh", "CAC Caucel", "Facturación", "Cobranza", "Notificaciones",
-  "T.I."
+  "CAC Acanceh", "CAC Caucel", "Facturación", "Cobranza", "Notificaciones", "T.I."
 ];
 
 const DatosGenerales = ({ datos, onChange, onCargarDatos, showNotification }) => {
@@ -163,24 +166,39 @@ const DatosGenerales = ({ datos, onChange, onCargarDatos, showNotification }) =>
 
   useEffect(() => {
     if (!datos.periodo || !datos.mes || !datos.anio) {
+      // CORRECCIÓN DE FECHAS (Calcula siempre la semana correcta de Lunes a Viernes)
       const today = new Date();
-      const dayOfWeek = today.getDay() || 7; 
       const monday = new Date(today);
+      const dayOfWeek = today.getDay() === 0 ? 7 : today.getDay(); // El domingo es 7
       monday.setDate(today.getDate() - dayOfWeek + 1);
-      const friday = new Date(today);
-      friday.setDate(today.getDate() - dayOfWeek + 5);
+      
+      const friday = new Date(monday);
+      friday.setDate(monday.getDate() + 4);
+
       const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
       onChange({
         periodo: datos.periodo || `Del ${monday.getDate()} al ${friday.getDate()}`,
-        mes: datos.mes || meses[today.getMonth()],
-        anio: datos.anio || today.getFullYear().toString()
+        mes: datos.mes || meses[monday.getMonth()],
+        anio: datos.anio || monday.getFullYear().toString()
       });
     }
   }, []);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+    
+    if (name === "nombre") {
+      value = value.toUpperCase();
+    }
+    if (name === "rpe") {
+      value = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
+    }
+    // NUEVO: Limitar el número económico a 8 caracteres y pasarlo a mayúsculas por si lleva letras
+    if (name === "noEco") {
+      value = value.toUpperCase().slice(0, 8);
+    }
+
     onChange({ [name]: value });
   };
 
@@ -256,7 +274,7 @@ const DatosGenerales = ({ datos, onChange, onCargarDatos, showNotification }) =>
         )}
 
         <div className="form-group full-width">
-          <label>Periodo de Revisión (Auto-calculado):</label>
+          <label>Periodo de Revisión:</label>
           <input type="text" name="periodo" value={datos.periodo || ''} onChange={handleChange} />
         </div>
         <div className="form-group">
@@ -277,11 +295,12 @@ const DatosGenerales = ({ datos, onChange, onCargarDatos, showNotification }) =>
       <div className="form-grid">
         <div className="form-group full-width">
           <label>Nombre Completo:</label>
-          <input type="text" name="nombre" value={datos.nombre || ''} onChange={handleChange} placeholder="Tu nombre" />
+          {/* El input automáticamente convierte a mayúsculas por el handleChange */}
+          <input type="text" name="nombre" value={datos.nombre || ''} onChange={handleChange} placeholder="NOMBRE COMPLETO" />
         </div>
         <div className="form-group">
-          <label>RPE:</label>
-          <input type="text" name="rpe" value={datos.rpe || ''} onChange={handleChange} placeholder="Tu RPE" />
+          <label>RPE (5 Caracteres):</label>
+          <input type="text" name="rpe" value={datos.rpe || ''} onChange={handleChange} placeholder="AB123" maxLength="5" />
         </div>
       </div>
     </div>

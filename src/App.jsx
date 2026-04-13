@@ -70,7 +70,7 @@
 //             type="email" 
 //             value={correo} 
 //             onChange={(e) => setCorreo(e.target.value)} 
-//             placeholder="Correo Empresarial" 
+//             placeholder="Correo empresarial" 
 //             style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '2px solid #cbd5e0', marginTop: '8px', fontSize: '1rem' }}
 //           />
 //         </div>
@@ -1299,8 +1299,7 @@
 
 //       <style>{`
 //         * { box-sizing: border-box; margin: 0; padding: 0; }
-//         :root { color-scheme: light dark; }
-//         body { background: #f0f4f8; color: #333; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+//         body { background: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 //         .app { padding: 15px; max-width: 800px; margin: 0 auto; min-height: 100vh; position: relative; }
 //         header { text-align: center; margin-bottom: 25px; position: relative; }
 //         h1 { color: #1a365d; font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; margin-top: 10px; }
@@ -1335,22 +1334,6 @@
 //         .signature-pad { border: 2px dashed #cbd5e0; border-radius: 12px; background: #f8fafc; margin-bottom: 15px; overflow: hidden; touch-action: none; }
 //         .signature-canvas { width: 100%; height: 250px; display: block; }
 //         @media (max-width: 640px) { .contenido { padding: 15px; } .form-grid { grid-template-columns: 1fr; } .navegacion { flex-direction: column-reverse; } .btn { width: 100%; } }
-
-//         /* =========================================
-//            SOPORTE PARA MODO OSCURO (DARK MODE)
-//            ========================================= */
-//         @media (prefers-color-scheme: dark) {
-//           body { background: #121212 !important; color: #e2e8f0 !important; }
-//           .contenido, .card, .paso { background: #1e293b !important; box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important; }
-//           h1, h2, h3, .card-title, .paso { color: #93c5fd !important; }
-//           p, label, span, .subtitulo { color: #cbd5e1 !important; }
-//           .form-group input, .form-group select { background: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
-//           .form-group input:focus, .form-group select:focus { border-color: #38bdf8 !important; box-shadow: 0 0 0 3px rgba(56,189,248,0.2) !important; }
-//           .btn-secondary { background: #334155 !important; color: #f1f5f9 !important; }
-//           .btn-secondary:hover { background: #475569 !important; }
-//           .signature-pad { background: #ffffff !important; border-color: #94a3b8 !important; }
-//           .alerta-foto { background: #422006 !important; color: #fef08a !important; border-left-color: #eab308 !important; }
-//         }
 //       `}</style>
 //     </div>
 //   );
@@ -1366,10 +1349,15 @@
 
 
 
+
+
+
+
+
 import React, { useState, useEffect } from 'react';
 import './App.css'; 
 
-// Importación de todos tus componentes divididos
+// --- IMPORTACIONES VEHICULAR ---
 import Login from './components/vehicular/Login';
 import Home from './components/vehicular/Home';
 import DatosGenerales from './components/vehicular/DatosGenerales';
@@ -1380,13 +1368,16 @@ import Firma from './components/vehicular/Firma';
 import Reporte from './components/vehicular/Reporte';
 import Notification from './components/vehicular/Notification';
 
+// --- IMPORTACIONES EDIFICACIÓN ---
+import DatosEdificio from './components/edificacion/DatosEdificio';
+import ChecklistEdificio, { itemsEdificio } from './components/edificacion/ChecklistEdificio';
+import ReporteEdificio from './components/edificacion/ReporteEdificio';
+
 function App() {
-  // === 1. ESTADOS INICIALES (Aquí controlamos el flujo) ===
   const [usuarioLogueado, setUsuarioLogueado] = useState(null);
   const [moduloActivo, setModuloActivo] = useState(null);
   const [paso, setPaso] = useState(1);
   
-  // === 2. ESTADOS DE DATOS ===
   const [datosForm, setDatosForm] = useState({ semanaReporte: "1" }); 
   const [checklist, setChecklist] = useState({});
   const [datos, setDatos] = useState({ capturas: {}, ubicacion: null, direccion: '', hora: '', firma: null, coordenadas: null });
@@ -1411,34 +1402,58 @@ function App() {
   const actualizarDatosForm = (nuevos) => setDatosForm(prev => ({ ...prev, ...nuevos }));
   
   useEffect(() => {
-    const sem = datosForm.semanaReporte || "1";
-    setChecklist(historicoSemanas[sem] || {});
-  }, [datosForm.semanaReporte, historicoSemanas]);
+    // Solo cargamos el histórico si estamos en vehículos
+    if (moduloActivo === 'vehiculos') {
+      const sem = datosForm.semanaReporte || "1";
+      setChecklist(historicoSemanas[sem] || {});
+    }
+  }, [datosForm.semanaReporte, historicoSemanas, moduloActivo]);
   
   const handleChecklistChange = (nuevoChecklist) => setChecklist(nuevoChecklist);
 
   const calcularFotosRequeridas = () => {
-    let requeridas = ["Frente del vehículo", "Parte Trasera", "Lado Izquierdo", "Lado Derecho"];
-    Object.keys(checklist).forEach(item => {
-      if (item !== "_observaciones" && item !== "_kilometraje" && (checklist[item] === "NO" || checklist[item] === "NA")) {
-        requeridas.push(`Falla: ${item}`);
-      }
-    });
+    let requeridas = [];
+    if (moduloActivo === 'vehiculos') {
+      requeridas = ["Frente del vehículo", "Parte Trasera", "Lado Izquierdo", "Lado Derecho"];
+      Object.keys(checklist).forEach(item => {
+        if (item !== "_observaciones" && item !== "_kilometraje" && (checklist[item] === "NO" || checklist[item] === "NA")) {
+          requeridas.push(`Falla: ${item}`);
+        }
+      });
+    } else if (moduloActivo === 'edificios') {
+      // En edificios pedimos una foto general de fachada y las evidencias de fallas
+      requeridas = ["Fachada del Edificio"]; 
+      Object.keys(checklist).forEach(item => {
+        if (checklist[item]?.estado === "NO" || checklist[item]?.estado === "MPC") {
+          requeridas.push(`Evidencia: ${item}`);
+        }
+      });
+    }
     setFotosRequeridas(requeridas);
   };
 
   const siguientePaso = () => {
     if (paso === 1) {
-      const camposObligatorios = ['noEco', 'area', 'periodo', 'mes', 'anio', 'kilometraje', 'nombre', 'rpe'];
-      const faltan = camposObligatorios.filter(campo => !datosForm[campo] || datosForm[campo].toString().trim() === '');
-      if (faltan.length > 0) { showNotification(`Faltan campos: ${faltan.join(', ')}`, 'warning'); return; }
-      setMostrarModal(true); return;
+      if (moduloActivo === 'vehiculos') {
+        const faltan = ['noEco', 'area', 'periodo', 'mes', 'anio', 'kilometraje', 'nombre', 'rpe'].filter(c => !datosForm[c] || datosForm[c].toString().trim() === '');
+        if (faltan.length > 0) { showNotification(`Faltan campos: ${faltan.join(', ')}`, 'warning'); return; }
+        setMostrarModal(true); return; 
+      } else if (moduloActivo === 'edificios') {
+        const faltan = ['area', 'direccion', 'mes', 'tipoInspeccion', 'fecha1'].filter(c => !datosForm[c] || datosForm[c].toString().trim() === '');
+        if (faltan.length > 0) { showNotification(`Faltan campos: ${faltan.join(', ')}`, 'warning'); return; }
+        setPaso(2); return; // Pasa directo al checklist porque no hay modal de licencia en edificios
+      }
     }
     
     if (paso === 2) {
-      const itemsTotales = Object.values(estructura).flat();
-      const faltantes = itemsTotales.filter(item => !checklist[item]);
-      if (faltantes.length > 0) { showNotification(`Faltan por contestar: ${faltantes.length} items`, 'warning'); return; }
+      if (moduloActivo === 'vehiculos') {
+        const itemsTotales = Object.values(estructura).flat();
+        const faltantes = itemsTotales.filter(item => !checklist[item]);
+        if (faltantes.length > 0) { showNotification(`Faltan puntos por contestar en la lista`, 'warning'); return; }
+      } else if (moduloActivo === 'edificios') {
+        const faltantes = itemsEdificio.filter(item => !checklist[item] || !checklist[item].estado);
+        if (faltantes.length > 0) { showNotification(`Faltan puntos por contestar en la lista`, 'warning'); return; }
+      }
       calcularFotosRequeridas(); 
       setPaso(3); return;
     }
@@ -1476,10 +1491,12 @@ function App() {
   const anteriorPaso = () => { if (paso > 1) setPaso(paso - 1); };
 
   const historicoSemanasActualizado = { ...historicoSemanas };
-  historicoSemanasActualizado[datosForm.semanaReporte] = { ...checklist, _kilometraje: datosForm.kilometraje };
+  if (moduloActivo === 'vehiculos') {
+    historicoSemanasActualizado[datosForm.semanaReporte] = { ...checklist, _kilometraje: datosForm.kilometraje };
+  }
   
   const historicoFotosActualizado = { ...historicoFotos };
-  if (Object.keys(datos.capturas || {}).length > 0) {
+  if (Object.keys(datos.capturas || {}).length > 0 && moduloActivo === 'vehiculos') {
     historicoFotosActualizado[datosForm.semanaReporte] = {
       capturas: datos.capturas, hora: datos.hora, direccion: datos.direccion, coordenadas: datos.coordenadas
     };
@@ -1495,9 +1512,6 @@ function App() {
     setVerificaciones({ seguroVigente: false, tarjetaCombustible: false, licenciaVigente: false, fechaLicencia: '' });
   };
 
-  // === 3. RENDERIZADO DEL FLUJO ===
-
-  // 1er Bloqueo: Si no hay usuario, muestra solo el Login
   if (!usuarioLogueado) {
     return (
       <div className="app" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#f0f4f8' }}>
@@ -1507,7 +1521,6 @@ function App() {
     );
   }
 
-  // 2do Bloqueo: Si ya se logueó pero no ha elegido módulo, muestra el Home
   if (!moduloActivo) {
     return ( 
       <div className="app" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
@@ -1517,7 +1530,6 @@ function App() {
     );
   }
 
-  // 3er Escenario: Ya se logueó y eligió módulo, mostramos el proceso
   return (
     <div className="app">
       {notification && <Notification message={notification.message} type={notification.type} onClose={() => setNotification(null)} />}
@@ -1535,7 +1547,8 @@ function App() {
         </div>
       )}
 
-      {mostrarModal && (
+      {/* MODAL DE VEHICULOS */}
+      {mostrarModal && moduloActivo === 'vehiculos' && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
           <div style={{ background: 'white', padding: '30px', borderRadius: '16px', maxWidth: '500px' }}>
             <h3>⚠️ Verificaciones Obligatorias</h3>
@@ -1543,24 +1556,13 @@ function App() {
             <label><input type="checkbox" name="tarjetaCombustible" checked={verificaciones.tarjetaCombustible} onChange={handleCheckModal}/> Tarjeta combustible</label><br/><br/>
             <label><input type="checkbox" name="licenciaVigente" checked={verificaciones.licenciaVigente} onChange={handleCheckModal}/> Licencia vigente</label><br/><br/>
             
-            {/* AQUÍ ESTÁ EL NUEVO RECUADRO PARA LA FECHA */}
             {verificaciones.licenciaVigente && (
               <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '2px dashed #cbd5e0', marginTop: '10px' }}>
-                <label style={{ fontWeight: 'bold', color: '#1a365d', display: 'block', marginBottom: '8px' }}>
-                  📅 Ingresa la fecha de vencimiento de la licencia:
-                </label>
-                <input 
-                  type="date" 
-                  name="fechaLicencia" 
-                  value={verificaciones.fechaLicencia} 
-                  onChange={handleCheckModal} 
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e0', fontSize: '1rem', background: 'white' }} 
-                />
+                <label style={{ fontWeight: 'bold', color: '#1a365d', display: 'block', marginBottom: '8px' }}>📅 Ingresa la fecha de vencimiento de la licencia:</label>
+                <input type="date" name="fechaLicencia" value={verificaciones.fechaLicencia} onChange={handleCheckModal} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e0', fontSize: '1rem', background: 'white' }} />
               </div>
             )}
-
-            <br/><br/>
-            <button onClick={confirmarVerificaciones} className="btn btn-success w-full">Confirmar</button>
+            <br/><br/><button onClick={confirmarVerificaciones} className="btn btn-success w-full">Confirmar</button>
           </div>
         </div>
       )}
@@ -1568,7 +1570,7 @@ function App() {
       <header>
         <button onClick={intentarSalir} style={{ position: 'absolute', top: '0px', left: '0px', background: '#e2e8f0', border: 'none', borderRadius: '50%', width: '40px', height: '40px', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }} title="Volver al Menú Principal"> 🏠 </button>
         <h1>SeguridApp</h1>
-        <p className="subtitulo">Registro de Inspección CFE</p>
+        <p className="subtitulo">{moduloActivo === 'vehiculos' ? 'Registro de Inspección Vehicular' : 'Registro de Inspección Edificios'}</p>
         <div className="progreso-container">
           <div className="progreso">
             <div className={`paso ${paso >= 1 ? 'activo' : ''}`}>1. Datos</div>
@@ -1582,61 +1584,15 @@ function App() {
       </header>
       
       <main className="contenido step-transition">
-        {paso === 1 && (
-          <DatosGenerales 
-            datos={datosForm} 
-            onChange={actualizarDatosForm} 
-            showNotification={showNotification} 
-            onCargarDatos={(datosExtraidos) => {
-              const histSem = datosExtraidos.historicoSemanas || { 1: {}, 2: {}, 3: {}, 4: {} };
-              let semanaAnterior = "1";
-              let siguienteSemana = "1";
-              
-              // Verificamos en qué semana vamos según los datos cargados
-              if (Object.keys(histSem[1] || {}).length > 1) { semanaAnterior = "1"; siguienteSemana = "2"; }
-              if (Object.keys(histSem[2] || {}).length > 1) { semanaAnterior = "2"; siguienteSemana = "3"; }
-              if (Object.keys(histSem[3] || {}).length > 1) { semanaAnterior = "3"; siguienteSemana = "4"; }
-              if (Object.keys(histSem[4] || {}).length > 1) { 
-                showNotification('Este reporte ya tiene las 4 semanas completas.', 'warning');
-                siguienteSemana = "4"; // O podrías reiniciar a "1" si es un mes nuevo
-              }
-              
-              const fallasArrastradas = {};
-              const obsArrastradas = {};
-              
-              // Arrastramos las fallas de la semana anterior a la nueva semana
-              if (siguienteSemana !== "1" && histSem[semanaAnterior]) {
-                Object.keys(histSem[semanaAnterior]).forEach(item => {
-                  if (item !== "_observaciones" && item !== "_kilometraje") {
-                    const valor = histSem[semanaAnterior][item];
-                    if (valor === "NO" || valor === "NA") {
-                      fallasArrastradas[item] = valor;
-                      if (histSem[semanaAnterior]._observaciones && histSem[semanaAnterior]._observaciones[item]) {
-                        obsArrastradas[item] = histSem[semanaAnterior]._observaciones[item];
-                      }
-                    }
-                  }
-                });
-                if (Object.keys(fallasArrastradas).length > 0) {
-                  fallasArrastradas._observaciones = obsArrastradas;
-                  histSem[siguienteSemana] = fallasArrastradas;
-                }
-              }
+        {/* === RENDERIZADO CONDICIONAL POR MÓDULOS === */}
+        
+        {paso === 1 && moduloActivo === 'vehiculos' && <DatosGenerales datos={datosForm} onChange={actualizarDatosForm} onCargarDatos={() => {}} showNotification={showNotification} />}
+        {paso === 1 && moduloActivo === 'edificios' && <DatosEdificio datos={datosForm} onChange={actualizarDatosForm} />}
 
-              // Actualizamos todos los estados de la App con lo que venía en el PDF
-              setDatosForm(prev => ({ 
-                ...prev, 
-                ...(datosExtraidos.form || {}), 
-                semanaReporte: siguienteSemana, 
-                kilometraje: "", // Dejamos el kilometraje vacío para que pongan el nuevo
-                idDocumentoPrevio: datosExtraidos.idActual || "" 
-              }));
-              setHistoricoSemanas(histSem);
-              setHistoricoFotos(datosExtraidos.historicoFotos || {});
-            }} 
-          />
-        )}
-        {paso === 2 && <Checklist onChange={handleChecklistChange} datosPrevios={checklist} />}
+        {paso === 2 && moduloActivo === 'vehiculos' && <Checklist onChange={handleChecklistChange} datosPrevios={checklist} />}
+        {paso === 2 && moduloActivo === 'edificios' && <ChecklistEdificio onChange={handleChecklistChange} datosPrevios={checklist} />}
+
+        {/* PASOS 3 AL 5 SON IGUALES PARA AMBOS MÓDULOS */}
         {paso === 3 && (
           <div className="fade-in">
             <div className="alerta-foto">📸 Toma las fotos obligatorias y evidencias.</div>
@@ -1645,7 +1601,10 @@ function App() {
         )}
         {paso === 4 && <Ubicacion onUbicacionObtenida={(ubicacion, direccion, coordenadas) => actualizarDatos({ ubicacion, direccion, coordenadas })} showNotification={showNotification} />}
         {paso === 5 && <Firma onFirmaCompletada={(firma) => actualizarDatos({ firma })} showNotification={showNotification} />}
-        {paso === 6 && <Reporte datos={{ ...datos, form: datosForm }} historicoSemanas={historicoSemanasActualizado} historicoFotos={historicoFotosActualizado} showNotification={showNotification} />}
+        
+        {/* PASO 6 SE DIVIDE OTRA VEZ */}
+        {paso === 6 && moduloActivo === 'vehiculos' && <Reporte datos={{ ...datos, form: datosForm }} historicoSemanas={historicoSemanasActualizado} historicoFotos={historicoFotosActualizado} showNotification={showNotification} />}
+        {paso === 6 && moduloActivo === 'edificios' && <ReporteEdificio datosForm={datosForm} checklist={checklist} firma={datos.firma} showNotification={showNotification} />}
 
         <div className="navegacion">
           {(paso > 1 && paso < 6) && <button onClick={anteriorPaso} className="btn btn-secondary">← Regresar</button>}
