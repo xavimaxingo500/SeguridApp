@@ -1620,6 +1620,10 @@
 
 
 
+
+
+
+
 import React, { useState, useEffect } from 'react';
 import './App.css'; 
 
@@ -1668,12 +1672,15 @@ function App() {
   const actualizarDatosForm = (nuevos) => setDatosForm(prev => ({ ...prev, ...nuevos }));
   
   useEffect(() => {
-    // Solo cargamos el histórico si estamos en vehículos
     if (moduloActivo === 'vehiculos') {
       const sem = datosForm.semanaReporte || "1";
-      setChecklist(historicoSemanas[sem] || {});
+      // Solo cargamos el checklist si ya hay datos de esa semana en el histórico
+      // (si acabamos de cargar el PDF, el checklist debe estar vacío para la nueva semana)
+      if (Object.keys(checklist).length === 0 && historicoSemanas[sem] && Object.keys(historicoSemanas[sem]).length > 0) {
+         setChecklist(historicoSemanas[sem]);
+      }
     }
-  }, [datosForm.semanaReporte, historicoSemanas, moduloActivo]);
+  }, [datosForm.semanaReporte, historicoSemanas, moduloActivo, checklist]);
   
   const handleChecklistChange = (nuevoChecklist) => setChecklist(nuevoChecklist);
 
@@ -1687,7 +1694,6 @@ function App() {
         }
       });
     } else if (moduloActivo === 'edificios') {
-      // En edificios pedimos una foto general de fachada y las evidencias de fallas
       requeridas = ["Fachada del Edificio"]; 
       Object.keys(checklist).forEach(item => {
         if (checklist[item]?.estado === "NO" || checklist[item]?.estado === "MPC") {
@@ -1707,7 +1713,7 @@ function App() {
       } else if (moduloActivo === 'edificios') {
         const faltan = ['area', 'direccion', 'mes', 'tipoInspeccion', 'fecha1'].filter(c => !datosForm[c] || datosForm[c].toString().trim() === '');
         if (faltan.length > 0) { showNotification(`Faltan campos: ${faltan.join(', ')}`, 'warning'); return; }
-        setPaso(2); return; // Pasa directo al checklist porque no hay modal de licencia en edificios
+        setPaso(2); return;
       }
     }
     
@@ -1768,21 +1774,37 @@ function App() {
     };
   }
 
-  // --- REPARACIÓN AÑADIDA AQUÍ ---
+  // --- FUNCIÓN REPARADA PARA CARGAR PDF ---
   const handleCargarDatosDesdePDF = (datosPDF) => {
-    if (datosPDF.form) {
-      setDatosForm(prev => ({ ...prev, ...datosPDF.form, idDocumentoPrevio: datosPDF.idActual }));
-    }
+    let proximaSemana = 1;
+    
     if (datosPDF.historicoSemanas) {
       setHistoricoSemanas(datosPDF.historicoSemanas);
-      const semActual = datosPDF.form?.semanaReporte || "1";
-      setChecklist(datosPDF.historicoSemanas[semActual] || {});
+      
+      // Magia: Detectar automáticamente qué semana te toca llenar ahora
+      if (datosPDF.historicoSemanas[1] && Object.keys(datosPDF.historicoSemanas[1]).length > 0) proximaSemana = 2;
+      if (datosPDF.historicoSemanas[2] && Object.keys(datosPDF.historicoSemanas[2]).length > 0) proximaSemana = 3;
+      if (datosPDF.historicoSemanas[3] && Object.keys(datosPDF.historicoSemanas[3]).length > 0) proximaSemana = 4;
     }
+    
     if (datosPDF.historicoFotos) {
       setHistoricoFotos(datosPDF.historicoFotos);
     }
+
+    setDatosForm(prev => ({
+      ...prev, // Conserva la fecha, mes y periodo que se generaron HOY
+      semanaReporte: proximaSemana.toString(), // Te avanza a la semana correcta
+      nombre: datosPDF.form?.nombre || prev.nombre,
+      rpe: datosPDF.form?.rpe || prev.rpe,
+      noEco: datosPDF.form?.noEco || prev.noEco,
+      area: datosPDF.form?.area || prev.area,
+      idDocumentoPrevio: datosPDF.idActual
+      // El kilometraje viejo NO se copia para que lo llenes nuevo.
+    }));
+    
+    // Limpiamos la lista para que empieces a revisar el carro en blanco esta nueva semana
+    setChecklist({});
   };
-  // -------------------------------
 
   const intentarSalir = () => setConfirmarSalir(true);
 
@@ -1850,7 +1872,7 @@ function App() {
       )}
 
       <header>
-        <button onClick={intentarSalir} style={{ position: 'absolute', top: '0px', left: '0px', background: '#e2e8f0', border: 'none', borderRadius: '50%', width: '40px', height: '40px', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSadow: '0 2px 5px rgba(0,0,0,0.1)' }} title="Volver al Menú Principal"> 🏠 </button>
+        <button onClick={intentarSalir} style={{ position: 'absolute', top: '0px', left: '0px', background: '#e2e8f0', border: 'none', borderRadius: '50%', width: '40px', height: '40px', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }} title="Volver al Menú Principal"> 🏠 </button>
         <h1>SeguridApp</h1>
         <p className="subtitulo">{moduloActivo === 'vehiculos' ? 'Registro de Inspección Vehicular' : 'Registro de Inspección Edificios'}</p>
         <div className="progreso-container">
@@ -1866,13 +1888,12 @@ function App() {
       </header>
       
       <main className="contenido step-transition">
-        {/* === RENDERIZADO CONDICIONAL POR MÓDULOS === */}
         
         {paso === 1 && moduloActivo === 'vehiculos' && (
           <DatosGenerales 
             datos={datosForm} 
             onChange={actualizarDatosForm} 
-            onCargarDatos={handleCargarDatosDesdePDF} /* REPARACIÓN AÑADIDA AQUÍ */
+            onCargarDatos={handleCargarDatosDesdePDF}
             showNotification={showNotification} 
           />
         )}
@@ -1886,7 +1907,6 @@ function App() {
         {paso === 2 && moduloActivo === 'vehiculos' && <Checklist onChange={handleChecklistChange} datosPrevios={checklist} />}
         {paso === 2 && moduloActivo === 'edificios' && <ChecklistEdificio onChange={handleChecklistChange} datosPrevios={checklist} />}
 
-        {/* PASOS 3 AL 5 SON IGUALES PARA AMBOS MÓDULOS */}
         {paso === 3 && (
           <div className="fade-in">
             <div className="alerta-foto">📸 Toma las fotos obligatorias y evidencias.</div>
@@ -1896,7 +1916,6 @@ function App() {
         {paso === 4 && <Ubicacion onUbicacionObtenida={(ubicacion, direccion, coordenadas) => actualizarDatos({ ubicacion, direccion, coordenadas })} showNotification={showNotification} />}
         {paso === 5 && <Firma onFirmaCompletada={(firma) => actualizarDatos({ firma })} showNotification={showNotification} />}
         
-        {/* PASO 6 SE DIVIDE OTRA VEZ */}
         {paso === 6 && moduloActivo === 'vehiculos' && <Reporte datos={{ ...datos, form: datosForm }} historicoSemanas={historicoSemanasActualizado} historicoFotos={historicoFotosActualizado} showNotification={showNotification} />}
         {paso === 6 && moduloActivo === 'edificios' && <ReporteEdificio datosForm={datosForm} checklist={checklist} firma={datos.firma} showNotification={showNotification} />}
 
