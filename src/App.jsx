@@ -321,6 +321,7 @@ import Ubicacion from './components/vehicular/Ubicacion';
 import Firma from './components/vehicular/Firma';
 import Reporte from './components/vehicular/Reporte';
 import Notification from './components/vehicular/Notification';
+import EdificiosApp from './components/edificacion/Edificios';
 
 // ⚠️ NOTA: Quita las diagonales "//" cuando tengas tus carpetas creadas
 // import DatosEdificio from './components/edificacion/DatosEdificio';
@@ -544,7 +545,9 @@ function App() {
       </div>
     );
   }
-
+if (moduloActivo === 'edificios') {
+    return <EdificiosApp onVolver={() => setModuloActivo(null)} />;
+  }
   return (
     <div className="app">
       {notification && <Notification message={notification.message} type={notification.type} onClose={() => setNotification(null)} />}

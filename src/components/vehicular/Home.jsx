@@ -83,14 +83,16 @@ const Home = ({ onSelectModule }) => {
         </button>
 
         {/* ¡BOTÓN ACTIVADO! */}
-        <button
+       <button
           onClick={() => onSelectModule('edificios')}
           style={{
-            background: '#4CAF50', color: 'white', padding: '20px', borderRadius: '16px',
+            background: '#2196F3', color: 'white', padding: '20px', borderRadius: '16px',
             fontSize: '1.1rem', fontWeight: 'bold', border: 'none', cursor: 'pointer',
-            boxShadow: '0 4px 10px rgba(76,175,80,0.3)', transition: 'transform 0.2s',
+            boxShadow: '0 4px 10px rgba(33,150,243,0.3)', transition: 'transform 0.2s',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
           }}
+          onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
+          onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
         >
           <span style={{ fontSize: '1.5rem' }}>🏢</span> Inspección de Edificios
         </button>
