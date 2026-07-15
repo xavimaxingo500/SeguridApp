@@ -65,7 +65,7 @@ const Home = ({ onSelectModule }) => {
   return (
     <div className="card text-center" style={{ maxWidth: '600px', margin: '40px auto', padding: '40px 20px' }}>
       <h1 style={{ color: '#1a365d', fontSize: '2.2rem', marginBottom: '10px' }}>SeguridApp CFE</h1>
-      <p style={{ color: '#718096', marginBottom: '40px', fontSize: '1.1rem' }}>Sistema Integral de Reportes y Revisiones</p>
+      <p style={{ color: '#718096', marginBottom: '40px', fontSize: '1.1rem' }}>Interfaz Digital de Inspecciones</p>
 
       <h2 style={{ fontSize: '1.3rem', color: '#2d3748', marginBottom: '20px' }}>Selecciona el módulo a utilizar:</h2>
 
@@ -97,12 +97,42 @@ const Home = ({ onSelectModule }) => {
           <span style={{ fontSize: '1.5rem' }}>🏢</span> Inspección de Edificios
         </button>
 
-        <button disabled style={btnInactivoStyle}>
+        {/* <button disabled style={btnInactivoStyle}>
           <span style={{ fontSize: '1.5rem' }}>🧯</span> Revisión de Extintores <br/><span style={{ fontSize: '0.8rem', fontWeight: 'normal' }}>(En desarrollo)</span>
+        </button> */}
+{/* BOTÓN DE EXTINTORES ACTIVADO */}
+        <button
+          onClick={() => onSelectModule('extintores')}
+          style={{
+            background: '#2196F3', 
+            color: 'white', padding: '20px', borderRadius: '16px',
+            fontSize: '1.1rem', fontWeight: 'bold', border: 'none', cursor: 'pointer',
+            boxShadow: '0 4px 10px rgba(33,150,243,0.3)', transition: 'transform 0.2s',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
+          onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+        >
+          <span style={{ fontSize: '1.5rem' }}>🧯</span> Inspección de Extintores
         </button>
 
-        <button disabled style={btnInactivoStyle}>
+        {/* <button disabled style={btnInactivoStyle}>
           <span style={{ fontSize: '1.5rem' }}>📋</span> Botiquines <br/><span style={{ fontSize: '0.8rem', fontWeight: 'normal' }}>(En desarrollo)</span>
+        </button> */}
+        {/* BOTÓN DE BOTIQUINES ACTIVADO */}
+        <button
+          onClick={() => onSelectModule('botiquines')}
+           style={{
+            background: '#2196F3', 
+            color: 'white', padding: '20px', borderRadius: '16px',
+            fontSize: '1.1rem', fontWeight: 'bold', border: 'none', cursor: 'pointer',
+            boxShadow: '0 4px 10px rgba(33,150,243,0.3)', transition: 'transform 0.2s',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
+          onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+        >
+          <span style={{ fontSize: '1.5rem' }}>🚑</span> Inspección de Botiquines
         </button>
       </div>
     </div>

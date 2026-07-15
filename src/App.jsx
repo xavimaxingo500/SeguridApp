@@ -322,6 +322,9 @@ import Firma from './components/vehicular/Firma';
 import Reporte from './components/vehicular/Reporte';
 import Notification from './components/vehicular/Notification';
 import EdificiosApp from './components/edificacion/Edificios';
+// ⚠️ Descomenta o agrega esta línea para traer tu nuevo módulo
+import BotiquinesApp from './components/botiquines/BotiquinesApp';
+import ExtintoresApp from './components/extinguidores/ExtintoresApp';
 
 // ⚠️ NOTA: Quita las diagonales "//" cuando tengas tus carpetas creadas
 // import DatosEdificio from './components/edificacion/DatosEdificio';
@@ -547,6 +550,14 @@ function App() {
   }
 if (moduloActivo === 'edificios') {
     return <EdificiosApp onVolver={() => setModuloActivo(null)} />;
+  }
+
+  if (moduloActivo === 'botiquines') {
+    return <BotiquinesApp onVolver={() => setModuloActivo(null)} />;
+  }
+  
+  if (moduloActivo === 'extintores') {
+    return <ExtintoresApp onVolver={() => setModuloActivo(null)} />;
   }
   return (
     <div className="app">
